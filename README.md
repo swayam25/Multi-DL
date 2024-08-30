@@ -34,9 +34,7 @@ A multimedia downloader which can download any video, music, playlist, album etc
 - **Supported Python version:** 3.10 or higher
 - Build from source
     ```sh
-    git clone <repository url> multidl
-    cd multidl
-    pip install .
+    pip install git+<repository url>
     ```
 
 > [!TIP]

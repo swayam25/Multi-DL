@@ -1,5 +1,5 @@
 import typer
-from multidl.main import MultiDL
+from multidl.multidl import MultiDL
 
 # Typer initialization
 app = typer.Typer(
@@ -31,3 +31,6 @@ def download(
 ):
     """Download any multimedia via link, keywords etc"""
     MultiDL(query).download(only_audio)
+
+if __name__ == "__main__":
+    app()

@@ -1,15 +1,13 @@
 import datetime, time
 import requests
 import json
-from bs4 import BeautifulSoup
 from multidl.youtube import AdvanceSearchDL
 from multidl import terminal
 
 # Get temp spotify token
 def get_spotify_token():
-    sp = requests.get("https://open.spotify.com/")
-    sp_text = BeautifulSoup(sp.content, "html.parser").find("script", {"id": "session"}).get_text()
-    return json.loads(sp_text)['accessToken']
+    sp = requests.get("https://open.spotify.com/get_access_token?reason=transport&productType=web_player")
+    return json.loads(sp.text)['accessToken']
 
 class Spotify:
     """

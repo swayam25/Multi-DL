@@ -27,10 +27,10 @@ def info(query: str = typer.Argument(..., help="Keyword or link to get info")):
 @app.command()
 def download(
     query: str = typer.Argument(..., help="Keyword or link to download"),
-    only_audio: bool = typer.Option(False, "--only-audio", "-a", help="Download only audio (only for youtube)")
+    audio: bool = typer.Option(False, "--audio", "-a", help="Download only audio (only for youtube)")
 ):
     """Download any multimedia via link, keywords etc"""
-    MultiDL(query).download(only_audio)
+    MultiDL(query).download(audio)
 
 if __name__ == "__main__":
     app()

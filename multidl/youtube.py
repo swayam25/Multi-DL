@@ -1,10 +1,8 @@
 import datetime, time
 import requests
-import base64
 from multidl import terminal
-from mutagen.oggvorbis import OggVorbis
-from mutagen.flac import Picture
-from mutagen.id3 import PictureType
+from mutagen.mp3 import MP3
+from mutagen.id3 import APIC, PictureType
 from mutagen.mp4 import MP4, MP4Cover
 from yt_dlp import YoutubeDL
 from youtubesearchpython import VideosSearch
@@ -35,16 +33,17 @@ class GetYTOptions:
         yt_options = {
             "quiet": True,
             "noprogress": True,
-            "format": "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4] / bv*+ba/b",
+            "format": "bv*[ext=mp4]+ba[ext=m4a]/bv*+ba/b",
             "outtmpl": f"{dir}/{file_name}",
             "postprocessors": []
         }
         if only_audio:
+            yt_options["format"] = "ba[ext=m4a]/ba"
             yt_options["postprocessors"].append(
                 {
                     "key": "FFmpegExtractAudio",
-                    "preferredcodec": "vorbis",
-                    "preferredquality": "192",
+                    "preferredcodec": "mp3",
+                    "preferredquality": "0"
                 }
             )
         self.yt_options = yt_options
@@ -68,14 +67,16 @@ class AddMetaData:
             video = MP4(file)
             video["covr"] = [MP4Cover(art_data, imageformat=MP4Cover.FORMAT_JPEG)]
             video.save(file)
-        elif file.endswith(".ogg"):
-            audio = OggVorbis(file)
-            pic = Picture()
-            pic.type = PictureType.COVER_FRONT
-            pic.mime = "image/jpeg"
-            pic.data = art_data
-            pic_data = base64.b64encode(pic.write()).decode("ascii")
-            audio["metadata_block_picture"] = [pic_data]
+        elif file.endswith(".mp3"):
+            audio = MP3(file)
+            pic = APIC(
+                encoding=0,
+                mime="image/jpeg",
+                type=PictureType.FILE_ICON,
+                desc="File Icon",
+                data=art_data
+            )
+            audio.tags.add(pic)
             audio.save(file)
 
 class YouTube:
@@ -112,7 +113,7 @@ class YouTube:
                 self.progress.search.remove_task(task)
             # Print info
             terminal.InfoTable("Playlist", pl_data)
-   
+
     # Get video info
     def get_video_info(self):
         """Get video info"""

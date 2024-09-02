@@ -8,7 +8,7 @@ version = "1.0.0"
 requires-python= ">=3.10"
 description = "A multimedia downloader which can download any video, music, playlist, album etc via link, keywords etc"
 authors = [{name = "Swayam"}]
-license = {text = "MIT"}
+license = {text = "GPL-3.0"}
 readme = "README.md"
 dynamic = ["dependencies", "optional-dependencies"]
 keywords = ["multimedia", "multi downloader", "video downloader", "song downloader", "audio downloader", "downloader"]
@@ -20,7 +20,7 @@ classifiers = [
     "Intended Audience :: Other Audience",
     "Intended Audience :: Science/Research",
     "Intended Audience :: System Administrators",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: GPL-3.0 License",
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",

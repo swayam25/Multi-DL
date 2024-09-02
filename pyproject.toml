@@ -39,4 +39,4 @@ packages = ["multidl"]
 dependencies = {file = ["requirements.txt"]}
 
 [project.scripts]
-multidl = "multidl.cli:app"
+multidl = "multidl.__main__:app"

@@ -16,13 +16,15 @@ A multimedia downloader which can download any video, music, playlist, album etc
 
     ![Search Menu](./assets/search.png)
 
+- **Using `multidl`**
+    ![Preview](./assets/preview.mp4)
+
 ## 🎯 Features
 
 - Supports `YouTube` & `Spotify`
 - Obtain information about any video, music, playlist, album, etc
 - Download any video, music, playlist, album, etc
 - Supports a search system for downloading and obtaining information
-- Includes metadata for audio and video files *(also adds cover art to the files)*
 
 ## 🚀 Installation
 

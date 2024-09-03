@@ -16,7 +16,7 @@ A multimedia downloader which can download any video, music, playlist, album etc
 
     ![Search Menu](./assets/search.png)
 
-- [**Using `multidl`**](./assets/preview.mp4)
+- [**Demonstration**](./assets/demo.mp4)
 
 ## 🎯 Features
 

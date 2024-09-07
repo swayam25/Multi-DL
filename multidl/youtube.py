@@ -79,7 +79,7 @@ class AddMetaData:
                     data=art_data
                 )
             )
-            audio.tags.add( # Album art
+            audio.tags.add( # Song cover
                 APIC(
                     encoding=0,
                     mime="image/jpeg",

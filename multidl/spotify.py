@@ -122,8 +122,9 @@ class Spotify:
                     song['track']['name'],
                     True,
                     song['track']['album']['images'][0]['url'],
+                    song['track']['artists'][0]['name'],
                     pl['name'],
-                    f"{song['track']['name']} - {song['track']['artists'][0]['name']}"
+                    f"{song['track']['name']}"
                 )
                 # Progress
                 self.progress.download.print(f"[green][bold]✓[/] Downloaded[/] [cyan]{song['track']['name']}[/]")
@@ -153,8 +154,9 @@ class Spotify:
                     song['track']['name'],
                     True,
                     song['track']['album']['images'][0]['url'],
+                    song['track']['artists'][0]['name'],
                     album['name'],
-                    f"{song['name']} - {song['artists'][0]['name']}"
+                    f"{song['name']}"
                 )
                 # Progress
                 self.progress.download.print(f"[green][bold]✓[/] Downloaded[/] [cyan]{song['name']}[/]")
@@ -182,8 +184,9 @@ class Spotify:
                 song['name'],
                 True,
                 song['album']['images'][0]['url'],
+                song['artists'][0]['name'],
                 "",
-                f"{song['name']} - {song['artists'][0]['name']}"
+                f"{song['name']}"
             )
             # Progress
             self.progress.download.update(task, description=f"[green]Downloaded[/] [cyan]{song['name']}[/]", completed=1)

@@ -2,7 +2,7 @@ import datetime, time
 import requests
 from multidl import terminal
 from mutagen.mp3 import MP3
-from mutagen.id3 import APIC, PictureType
+from mutagen.id3 import APIC, PictureType, TPE1
 from mutagen.mp4 import MP4, MP4Cover
 from yt_dlp import YoutubeDL
 from youtubesearchpython import VideosSearch
@@ -21,7 +21,7 @@ class GetYTOptions:
             with YoutubeDL({"quiet": True}) as ytdlp:
                 pl = ytdlp.extract_info(query, download=False)
                 self.default_dir = pl['title']
-        self.default_file_name = "%(title)s - %(channel)s"
+        self.default_file_name = "%(title)s"
         self.yt_options = None
 
         if playlist:
@@ -60,8 +60,9 @@ class AddMetaData:
     Adds metadata to audio file
     :param file: file path
     :param art_url: album art url
+    :param artist: artist name
     """
-    def __init__(self, file, art_url):
+    def __init__(self, file, art_url, artist):
         art_data = requests.get(art_url).content
         if file.endswith(".mp4"):
             video = MP4(file)
@@ -69,14 +70,25 @@ class AddMetaData:
             video.save(file)
         elif file.endswith(".mp3"):
             audio = MP3(file)
-            pic = APIC(
-                encoding=0,
-                mime="image/jpeg",
-                type=PictureType.FILE_ICON,
-                desc="File Icon",
-                data=art_data
+            audio.tags.add( # File icon
+                APIC(
+                    encoding=0,
+                    mime="image/jpeg",
+                    type=PictureType.FILE_ICON,
+                    desc="Icon",
+                    data=art_data
+                )
             )
-            audio.tags.add(pic)
+            audio.tags.add( # Album art
+                APIC(
+                    encoding=0,
+                    mime="image/jpeg",
+                    type=PictureType.COVER_FRONT,
+                    desc="Cover",
+                    data=art_data
+                )
+            )
+            audio["TPE1"] = TPE1(text=[artist if artist else "Unknown Artist"]) # Add artist
             audio.save(file)
 
 class YouTube:
@@ -213,7 +225,7 @@ class YouTube:
                 # Download
                 file_info = ytdlp.extract_info(yt['webpage_url'], download=True)
                 # metadata
-                AddMetaData(file_info['requested_downloads'][0]['filepath'], yt['thumbnails'][0]['url'])
+                AddMetaData(file_info['requested_downloads'][0]['filepath'], yt['thumbnails'][0]['url'], yt['uploader'])
                 # Progress
                 self.progress.download.update(task, description=f"[green]Downloaded[/] [cyan]{yt['title']}[/]", completed=1)
 
@@ -242,12 +254,13 @@ class YouTube:
         self.download_video(only_audio=only_audio)
 
 class AdvanceSearchDL:
-    def __init__(self, query="", only_audio=False, thumbnail_url="", directory="", file_name=""):
+    def __init__(self, query="", only_audio=False, thumbnail_url="", artist="", directory="", file_name=""):
         """
         Advance search and download
         :param query: query
         :param only_audio: download only audio
         :param thumbnail_url: thumbnail url
+        :param artist: artist
         :param directory: directory
         :param file_name: file name
         """
@@ -259,4 +272,8 @@ class AdvanceSearchDL:
             file_info = ytdlp.extract_info(yt['webpage_url'], download=True)
             file_entry = file_info['entries'][0]
             # Metadata
-            AddMetaData(file_entry['requested_downloads'][0]['filepath'], thumbnail_url if thumbnail_url else file_entry['thumbnails'][0]['url'])
+            AddMetaData(
+                file_entry['requested_downloads'][0]['filepath'],
+                thumbnail_url if thumbnail_url else file_entry['thumbnails'][0]['url'],
+                artist if artist else file_entry['uploader']
+            )

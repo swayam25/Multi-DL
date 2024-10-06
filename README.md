@@ -35,7 +35,7 @@ A multimedia downloader which can download any video, music, playlist, album etc
 - **Supported Python version:** 3.10 or higher
 - Build from source
     ```sh
-    pip install git+<repository url>
+    pip install git+https://github.com/swayam25/Multi-DL
     ```
 
 > [!TIP]

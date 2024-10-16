@@ -3,39 +3,32 @@ import requests
 from multidl import terminal
 from mutagen.mp3 import MP3
 from mutagen.id3 import APIC, PictureType, TPE1
-from mutagen.mp4 import MP4, MP4Cover
 from yt_dlp import YoutubeDL
 from youtubesearchpython import VideosSearch
+from pytube import Playlist
 
 class GetYTOptions:
     """
     Get yt-dlp options
-    :param query: url or search query
     :param only_audio: download only audio
     :param dir: directory to save
-    :param file_name: file name to sav
-    :param playlist: is playlist
+    :param file_name: file name to save
+    :param progress_hook: progress hook
     """
-    def __init__(self, query, only_audio=False, dir="", file_name="", playlist=False):
-        if playlist:
-            with YoutubeDL({"quiet": True}) as ytdlp:
-                pl = ytdlp.extract_info(query, download=False)
-                self.default_dir = pl['title']
+    def __init__(self, only_audio=False, dir="", file_name="", progress_hook=None):
+        self.default_dir = "."
         self.default_file_name = "%(title)s"
         self.yt_options = None
-
-        if playlist:
-            dir = dir if dir else self.default_dir
-        else:
-            dir = dir if dir else "."
+        dir = dir if dir else self.default_dir
         file_name = file_name if file_name else self.default_file_name
 
         yt_options = {
             "quiet": True,
             "noprogress": True,
-            "format": "bv*[ext=mp4]+ba[ext=m4a]/bv*+ba/b",
+            "ignoreerrors": True,
+            "format": "bv*+ba/best",
             "outtmpl": f"{dir}/{file_name}",
-            "postprocessors": []
+            "postprocessors": [],
         }
         if only_audio:
             yt_options["format"] = "ba[ext=m4a]/ba"
@@ -46,6 +39,8 @@ class GetYTOptions:
                     "preferredquality": "0"
                 }
             )
+        if progress_hook:
+            yt_options["progress_hooks"] = [progress_hook]
         self.yt_options = yt_options
 
     def get(self):
@@ -64,11 +59,7 @@ class AddMetaData:
     """
     def __init__(self, file, art_url, artist):
         art_data = requests.get(art_url).content
-        if file.endswith(".mp4"):
-            video = MP4(file)
-            video["covr"] = [MP4Cover(art_data, imageformat=MP4Cover.FORMAT_JPEG)]
-            video.save(file)
-        elif file.endswith(".mp3"):
+        if file.endswith(".mp3"):
             audio = MP3(file)
             audio.tags.add( # File icon
                 APIC(
@@ -90,6 +81,58 @@ class AddMetaData:
             )
             audio["TPE1"] = TPE1(text=[artist if artist else "Unknown Artist"]) # Add artist
             audio.save(file)
+
+class AdvanceSearchDL:
+    def __init__(
+            self, query: str = "",
+            pl_name: str = "",
+            only_audio: bool = False,
+            title: str = "", thumbnail_url: str = "", artist: str = "",
+            progress: terminal.MultiProgress = None
+    ):
+        """
+        Advance search and download
+        :param query: query
+        :param list_query: list of queries
+        :param pl_name: playlist name
+        :param only_audio: download only audio
+        :param title: title of the video/audio
+        :param thumbnail_url: thumbnail url
+        :param artist: artist
+        :param progress: progress instance
+        """
+        self.progress = progress
+        is_url = (query.startswith("http") or query.startswith("www")) and "youtube.com" in query
+        # Progress
+        _title = title if title.__len__() < 20 else title[:20] + "..."
+        task = self.progress.download.add_task(description=f"[yellow]Downloading[/] [cyan]{_title}[/]", total=0, start=False) # Progress
+        # Info
+        if not is_url:
+            yt_options = GetYTOptions(query, only_audio, pl_name, title).get()
+            with YoutubeDL(yt_options) as ytdlp:
+                yt = ytdlp.extract_info(f"ytsearch:{query}", download=False)
+        # Download
+        def hook(d): # Progress hook
+            if "total_bytes" in d:
+                self.progress.download.start_task(task)
+                if d['status'] == "downloading":
+                    self.progress.download.update(task, total=d['total_bytes'], completed=d['downloaded_bytes'])
+                elif d['status'] == "finished":
+                    self.progress.download.update(task, description=f"[green]Downloaded[/] [cyan]{_title}[/]")
+            else:
+                self.progress.download.remove_task(task)
+                terminal.print(f"[red][bold]x[/] Error:[/] [cyan]Unable to download \"{title}\"[/]")
+                exit()
+        yt_options = GetYTOptions(only_audio=only_audio, dir=pl_name, file_name=title, progress_hook=hook).get()
+        with YoutubeDL(yt_options) as ytdlp:
+            file_info = ytdlp.extract_info(yt['webpage_url'] if not is_url else query, download=True)
+            file_entry = file_info['entries'][0] if "entries" in file_info else file_info
+            AddMetaData(
+                file_entry['requested_downloads'][0]['filepath'],
+                thumbnail_url if thumbnail_url else file_entry['thumbnails'][0]['url'],
+                artist if artist else file_entry['uploader']
+            )
+        self.progress.download.stop()
 
 class YouTube:
     """
@@ -180,29 +223,36 @@ class YouTube:
         Download playlist
         :param only_audio: download only audio
         """
-        yt_options = GetYTOptions(query=self.query, only_audio=only_audio, playlist=True).get()
+        yt_options = GetYTOptions(only_audio=only_audio).get()
         with YoutubeDL(yt_options) as ytdlp:
             with self.progress.live:
                 # Progress
                 task = self.progress.search.add_task("[yellow]Fetching Playlist[/]", total=1)
                 # Info
-                pl = ytdlp.extract_info(self.query, download=False)
-                # Progress
+                pl = Playlist(self.query)
+                pl_title = pl.title # Fetching the playlist title here to ensure it is fetched during the progress
+                # Progress to fetch playlist
                 self.progress.search.update(task, description="[green]Fetched Playlist[/]", completed=1)
                 time.sleep(1)
                 self.progress.search.remove_task(task)
-                task = self.progress.download.add_task(f"[yellow]Downloading[/] [cyan]{pl['title']}[/]", total=len(pl['entries']))
-                # Download
-                for video in pl['entries']:
-                    # Download
-                    file_info = ytdlp.extract_info(video['webpage_url'], download=True)
-                    # metadata
-                    AddMetaData(file_info['requested_downloads'][0]['filepath'], video['thumbnails'][0]['url'])
-                    # Progress
-                    self.progress.download.print(f"[green][bold]✓[/] Downloaded[/] [cyan]{file_info['title']}[/]")
-                    self.progress.update(task, advance=1)
-                # Progress
-                self.progress.download.update(task, description=f"[green]Downloaded[/] [cyan]{pl['title']}[/]", completed=len(pl['entries']))
+                # Progress for showing playlist data
+                task = self.progress.playlist.add_task(f"[yellow]Downloading[/] [cyan]{pl_title}[/]", total=len(pl))
+                # Download videos in playlist
+                for video in pl.videos:
+                    vid = ytdlp.extract_info(video.watch_url, download=False, process=False)
+                    AdvanceSearchDL(
+                        query=vid['webpage_url'],
+                        only_audio=only_audio,
+                        thumbnail_url=vid['thumbnails'][0]['url'],
+                        artist=vid['uploader'],
+                        pl_name=pl_title,
+                        title=vid['title'],
+                        progress=self.progress
+                    )
+                    # Progress for playlist data
+                    self.progress.playlist.update(task, advance=1)
+                # Progress finish for playlist data
+                self.progress.playlist.update(task, description=f"[green]Downloaded[/] [cyan]{pl.title}[/]", completed=len(pl))
 
     # Download video
     def download_video(self, only_audio=False):
@@ -210,24 +260,24 @@ class YouTube:
         Download video
         :param only_audio: download only audio
         """
-        yt_options = GetYTOptions(query=self.query, only_audio=only_audio).get()
-        with YoutubeDL(yt_options) as ytdlp:
-            with self.progress.live:
-                # Progress
-                task = self.progress.search.add_task("[yellow]Fetching Video[/]", total=1)
-                # Info
+        with self.progress.live:
+            # Info
+            yt_options = GetYTOptions(only_audio=only_audio).get()
+            with YoutubeDL(yt_options) as ytdlp:
+                task = self.progress.search.add_task("[yellow]Fetching Video[/]", total=1) # Progress
                 yt = ytdlp.extract_info(self.query, download=False)
-                # Progress
-                self.progress.search.update(task, description="[green]Fetched Video[/]", completed=1)
+                self.progress.search.update(task, description="[green]Fetched Video[/]", completed=1) # Progress update
                 time.sleep(1)
-                self.progress.search.remove_task(task)
-                task = self.progress.download.add_task(f"[yellow]Downloading[/] [cyan]{yt['title']}[/]", total=1)
-                # Download
-                file_info = ytdlp.extract_info(yt['webpage_url'], download=True)
-                # metadata
-                AddMetaData(file_info['requested_downloads'][0]['filepath'], yt['thumbnails'][0]['url'], yt['uploader'])
-                # Progress
-                self.progress.download.update(task, description=f"[green]Downloaded[/] [cyan]{yt['title']}[/]", completed=1)
+                self.progress.search.remove_task(task) # Progress remove
+            # Download
+            AdvanceSearchDL(
+                query=yt['webpage_url'],
+                only_audio=only_audio,
+                thumbnail_url=yt['thumbnails'][0]['url'],
+                artist=yt['uploader'],
+                title=yt['title'],
+                progress=self.progress
+            )
 
     # Download search
     def download_search(self, only_audio=False):
@@ -251,29 +301,4 @@ class YouTube:
         video_url = search[video_option]['link']
         # Download
         self.query = video_url
-        self.download_video(only_audio=only_audio)
-
-class AdvanceSearchDL:
-    def __init__(self, query="", only_audio=False, thumbnail_url="", artist="", directory="", file_name=""):
-        """
-        Advance search and download
-        :param query: query
-        :param only_audio: download only audio
-        :param thumbnail_url: thumbnail url
-        :param artist: artist
-        :param directory: directory
-        :param file_name: file name
-        """
-        yt_options = GetYTOptions(query, only_audio, directory, file_name).get()
-        with YoutubeDL(yt_options) as ytdlp:
-            # Info
-            yt = ytdlp.extract_info(f"ytsearch:{query}", download=False)
-            # Download
-            file_info = ytdlp.extract_info(yt['webpage_url'], download=True)
-            file_entry = file_info['entries'][0]
-            # Metadata
-            AddMetaData(
-                file_entry['requested_downloads'][0]['filepath'],
-                thumbnail_url if thumbnail_url else file_entry['thumbnails'][0]['url'],
-                artist if artist else file_entry['uploader']
-            )
+        self.download_video(only_audio)

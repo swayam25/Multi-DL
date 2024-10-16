@@ -1,7 +1,7 @@
 from rich import print, box
 from rich.console import Console, Group
 from rich.live import Live
-from rich.progress import Progress, SpinnerColumn, BarColumn, TimeElapsedColumn
+from rich.progress import *
 from rich.panel import Panel
 from rich.table import Table
 
@@ -75,14 +75,28 @@ class MultiProgress:
     """Multi Progress Bar Printing Util"""
     download = Progress(
         SpinnerColumn(style="yellow", finished_text="[green bold]✓[/]"),
-        "[progress.description]{task.description}",
-        "[progress.filesize]{task.completed}/{task.total}",
-        TimeElapsedColumn(),
+        TextColumn("[progress.description]{task.description}"),
         BarColumn(),
-        "[progress.percentage]{task.percentage:>3.0f}%"
+        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        TextColumn("•"),
+        DownloadColumn(),
+        TextColumn("•"),
+        TransferSpeedColumn(),
+        TextColumn("•"),
+        TimeElapsedColumn()
+    )
+    playlist = Progress(
+        SpinnerColumn(style="yellow", finished_text="[green bold]✓[/]"),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        TextColumn("•"),
+        MofNCompleteColumn(),
+        TextColumn("•"),
+        TimeElapsedColumn()
     )
     search = Progress(
         SpinnerColumn(style="yellow", finished_text="[green bold]✓[/]"),
-        "[progress.description]{task.description}",
+        TextColumn("[progress.description]{task.description}")
     )
-    live = Live(Group(download, search))
+    live = Live(Group(download, playlist, search))

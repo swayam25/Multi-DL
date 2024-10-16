@@ -114,23 +114,23 @@ class Spotify:
             self.progress.search.update(task, description="[green]Fetched Playlist[/]", completed=1)
             time.sleep(1)
             self.progress.search.remove_task(task)
-            task = self.progress.download.add_task(f"[yellow]Downloading[/] [cyan]{pl['name']}[/]", total=pl['tracks']['total'])
+            task = self.progress.playlist.add_task(f"[yellow]Downloading[/] [cyan]{pl['name']}[/]", total=pl['tracks']['total'])
             # Download
             for song in pl['tracks']['items']:
                 # Download song
                 AdvanceSearchDL(
-                    song['track']['name'],
-                    True,
-                    song['track']['album']['images'][0]['url'],
-                    song['track']['artists'][0]['name'],
-                    pl['name'],
-                    f"{song['track']['name']}"
+                    query=song['track']['name'],
+                    only_audio=True,
+                    thumbnail_url=song['track']['album']['images'][0]['url'],
+                    artist=song['track']['artists'][0]['name'],
+                    pl_name=pl['name'],
+                    title=f"{song['track']['name']}",
+                    progress=self.progress
                 )
                 # Progress
-                self.progress.download.print(f"[green][bold]✓[/] Downloaded[/] [cyan]{song['track']['name']}[/]")
-                self.progress.download.update(task, advance=1)
+                self.progress.playlist.update(task, advance=1)
             # Progress
-            self.progress.download.update(task, description=f"[green]Downloaded[/] [cyan]{pl['name']}[/]", completed=pl['tracks']['total'])
+            self.progress.playlist.update(task, description=f"[green]Downloaded[/] [cyan]{pl['name']}[/]", completed=pl['tracks']['total'])
 
     # Download album
     def download_album(self):
@@ -146,21 +146,21 @@ class Spotify:
             self.progress.search.update(task, description="[green]Fetched Album[/]", completed=1)
             time.sleep(1)
             self.progress.search.remove_task(task)
-            task = self.progress.download.add_task(f"[yellow]Downloading[/] [cyan]{album['name']}[/]", total=album['tracks']['total'])
+            task = self.progress.playlist.add_task(f"[yellow]Downloading[/] [cyan]{album['name']}[/]", total=album['tracks']['total'])
             # Download
             for song in album['tracks']['items']:
                 # Download
                 AdvanceSearchDL(
-                    song['track']['name'],
-                    True,
-                    song['track']['album']['images'][0]['url'],
-                    song['track']['artists'][0]['name'],
-                    album['name'],
-                    f"{song['name']}"
+                    query=song['track']['name'],
+                    only_audio=True,
+                    thumbnail_url=song['track']['album']['images'][0]['url'],
+                    artist=song['track']['artists'][0]['name'],
+                    pl_name=album['name'],
+                    title=f"{song['name']}",
+                    progress=self.progress
                 )
                 # Progress
-                self.progress.download.print(f"[green][bold]✓[/] Downloaded[/] [cyan]{song['name']}[/]")
-                self.progress.download.update(task, advance=1)
+                self.progress.playlist.update(task, advance=1)
             # Progress
             self.progress.search.update(task, description=f"[green]Downloaded[/] [cyan]{album['name']}[/]", completed=album['tracks']['total'])
 
@@ -178,15 +178,12 @@ class Spotify:
             self.progress.search.update(task, description="[green]Fetched Song[/]", completed=1)
             time.sleep(1)
             self.progress.search.remove_task(task)
-            task = self.progress.download.add_task(f"[yellow]Downloading[/] [cyan]{song['name']}[/]", total=1)
             # Download
             AdvanceSearchDL(
-                song['name'],
-                True,
-                song['album']['images'][0]['url'],
-                song['artists'][0]['name'],
-                "",
-                f"{song['name']}"
+                query=song['name'],
+                only_audio=True,
+                thumbnail_url=song['album']['images'][0]['url'],
+                artist=song['artists'][0]['name'],
+                title=f"{song['name']}",
+                progress=self.progress
             )
-            # Progress
-            self.progress.download.update(task, description=f"[green]Downloaded[/] [cyan]{song['name']}[/]", completed=1)

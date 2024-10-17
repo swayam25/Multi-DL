@@ -4,8 +4,8 @@ from multidl import terminal
 from mutagen.mp3 import MP3
 from mutagen.id3 import APIC, PictureType, TPE1
 from yt_dlp import YoutubeDL
-from youtubesearchpython import VideosSearch
 from pytube import Playlist
+from youtubesearchpython import VideosSearch
 
 class GetYTOptions:
     """

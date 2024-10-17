@@ -8,15 +8,17 @@ A multimedia downloader which can download any video, music, playlist, album etc
 
 ## 🎬️ Preview
 
-- **Help Menu**
+- **Fetch Info**
 
-    ![Help Menu](./assets/help.png)
+    ![Info](./assets/info.gif)
 
-- **Search Menu**
+- **Download Spotify Playlist**
 
-    ![Search Menu](./assets/search.png)
+    ![Download](./assets/download.gif)
 
-- [**Demonstration**](./assets/demo.mp4)
+- **Download Only Audio from Videos on YouTube**
+
+    ![Only Audio Download](./assets/only_audio_dl.gif)
 
 ## 🎯 Features
 

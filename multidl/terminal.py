@@ -83,7 +83,7 @@ class MultiProgress:
         TextColumn("•"),
         TransferSpeedColumn(),
         TextColumn("•"),
-        TimeElapsedColumn()
+        TimeRemainingColumn(compact=True)
     )
     playlist = Progress(
         SpinnerColumn(style="yellow", finished_text="[green bold]✓[/]"),
@@ -93,7 +93,7 @@ class MultiProgress:
         TextColumn("•"),
         MofNCompleteColumn(),
         TextColumn("•"),
-        TimeElapsedColumn()
+        TimeRemainingColumn(compact=True)
     )
     search = Progress(
         SpinnerColumn(style="yellow", finished_text="[green bold]✓[/]"),

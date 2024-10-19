@@ -104,7 +104,7 @@ class AdvanceSearchDL:
         self.progress = progress
         is_url = (query.startswith("http") or query.startswith("www")) and "youtube.com" in query
         # Progress
-        _title = title if title.__len__() < 20 else title[:20] + "..."
+        _title = title if title.__len__() < 20 else title[:20].strip() + "..."
         task = self.progress.download.add_task(description=f"[yellow]Downloading[/] [cyan]{_title}[/]", total=0, start=False) # Progress
         # Info
         if not is_url:
@@ -113,16 +113,11 @@ class AdvanceSearchDL:
                 yt = ytdlp.extract_info(f"ytsearch:{query}", download=False)
         # Download
         def hook(d): # Progress hook
-            if "total_bytes" in d:
-                self.progress.download.start_task(task)
-                if d['status'] == "downloading":
-                    self.progress.download.update(task, total=d['total_bytes'], completed=d['downloaded_bytes'])
-                elif d['status'] == "finished":
-                    self.progress.download.update(task, description=f"[green]Downloaded[/] [cyan]{_title}[/]")
-            else:
-                self.progress.download.remove_task(task)
-                terminal.print(f"[red][bold]x[/] Error:[/] [cyan]Unable to download \"{title}\"[/]")
-                exit()
+            self.progress.download.start_task(task) if "total_bytes" in d else None
+            if d['status'] == "downloading":
+                self.progress.download.update(task, total=d['total_bytes'] if "total_bytes" in d else d['downloaded_bytes']+1, completed=d['downloaded_bytes'])
+            elif d['status'] == "finished":
+                self.progress.download.update(task, description=f"[green]Downloaded[/] [cyan]{_title}[/]")
         yt_options = GetYTOptions(only_audio=only_audio, dir=pl_name, file_name=title, progress_hook=hook).get()
         with YoutubeDL(yt_options) as ytdlp:
             file_info = ytdlp.extract_info(yt['webpage_url'] if not is_url else query, download=True)

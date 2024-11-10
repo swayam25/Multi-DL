@@ -93,7 +93,7 @@ class MultiProgress:
         TextColumn("•"),
         MofNCompleteColumn(),
         TextColumn("•"),
-        TimeRemainingColumn(compact=True)
+        TimeElapsedColumn()
     )
     search = Progress(
         SpinnerColumn(style="yellow", finished_text="[green bold]✓[/]"),

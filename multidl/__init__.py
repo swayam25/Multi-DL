@@ -1,6 +1,6 @@
 __title__ = "multidl"
 __author__ = "Swayam"
-__license__ = "GPL-2.0"
+__license__ = "GPL-3.0"
 __version__ = "1.0.0"
 
 from .youtube import YouTube, AdvanceSearchDL

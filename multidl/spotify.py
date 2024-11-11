@@ -1,7 +1,7 @@
 import datetime, time
 import requests
 import json
-from multidl.youtube import AdvanceSearchDL
+from .youtube import AdvanceSearchDL
 from multidl import terminal
 
 # Get temp spotify token

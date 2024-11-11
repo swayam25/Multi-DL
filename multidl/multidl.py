@@ -1,6 +1,6 @@
-from multidl.youtube import YouTube
-from multidl.spotify import Spotify
-from multidl.terminal import PrintMultiDLInfo
+from .youtube import YouTube
+from .spotify import Spotify
+from .terminal import PrintMultiDLInfo
 from rich.console import Console
 
 console = Console()

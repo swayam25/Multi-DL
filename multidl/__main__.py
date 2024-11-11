@@ -1,5 +1,5 @@
 import typer
-from multidl.multidl import MultiDL
+from .multidl import MultiDL
 
 # Typer initialization
 app = typer.Typer(

@@ -1,15 +1,8 @@
-from multidl.youtube import YouTube, AdvanceSearchDL
-from multidl.spotify import Spotify
-from multidl.multidl import MultiDL
-
+__title__ = "multidl"
+__author__ = "Swayam"
+__license__ = "GPL-2.0"
 __version__ = "1.0.0"
 
-# YouTube
-YouTube
-AdvanceSearchDL
-
-# Spotify
-Spotify
-
-# Main
-MultiDL
+from .youtube import YouTube, AdvanceSearchDL
+from .spotify import Spotify
+from .multidl import MultiDL

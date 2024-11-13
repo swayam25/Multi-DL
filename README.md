@@ -43,6 +43,6 @@ A multimedia downloader which can download any video, music, playlist, album etc
 > [!TIP]
 > If you are using `virtual environment` (`venv`) and want to use `multidl` globally, create a link to `bin` directory
 >    ```sh
->    sudo ln -sf $HOME/multidl/.venv/bin/multidl $HOME/.local/bin/multidl
+>    sudo ln -sf .venv/bin/multidl $HOME/.local/bin/multidl
 >    ```
 > *Ensure the `$HOME/.local/bin` directory is included in your `$PATH` environment variable*

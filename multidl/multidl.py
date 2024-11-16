@@ -1,3 +1,4 @@
+import re
 from .youtube import YouTube
 from .spotify import Spotify
 from .terminal import PrintMultiDLInfo
@@ -13,33 +14,33 @@ class MultiDL:
     """
     def __init__(self, query: str = ""):
         self.query = query
-        # Replace
-        if "youtu.be/" in self.query:
-            self.query = self.query.replace("youtu.be/", "youtube.com/watch?v=")
-        elif "youtube.com/shorts/" in self.query:
-            self.query = self.query.replace("youtube.com/shorts/", "youtube.com/watch?v=")
-        elif "music.youtube.com/watch" in self.query:
-            self.query = self.query.replace("music.youtube.com/watch", "youtube.com/watch")
+        self.query = re.sub(
+            r"(youtu\.be/|youtube\.com/shorts/|music\.youtube\.com/watch)",
+            "youtube.com/watch?v=",
+            self.query
+        )
         self.query = self.query.split("&")[0]
         print()
 
     # Get info
     def get_info(self):
         """Get info about any multimedia via link, keywords etc"""
+        yt = YouTube(self.query)
         if "youtube.com" in self.query:
             if "playlist" in self.query:
-                YouTube(self.query).get_playlist_info()
+                yt.get_playlist_info()
             elif "watch" in self.query:
-                YouTube(self.query).get_video_info()
+                yt.get_video_info()
         elif "open.spotify.com" in self.query:
+            sp = Spotify(self.query)
             if "playlist" in self.query:
-                Spotify(self.query).get_playlist_info()
+                sp.get_playlist_info()
             elif "album" in self.query:
-                Spotify(self.query).get_album_info()
+                sp.get_album_info()
             elif "track" in self.query:
-                Spotify(self.query).get_song_info()
+                sp.get_song_info()
         else:
-            YouTube(self.query).get_search_info()
+            yt.get_search_info()
 
     # Download
     def download(self, only_audio: bool = False):
@@ -47,20 +48,22 @@ class MultiDL:
         Download any multimedia via link, keywords etc.
         :param only_audio: Download only audio (only for youtube)
         """
+        yt = YouTube(self.query)
         if "youtube.com" in self.query:
             if "playlist" in self.query:
-                YouTube(self.query).download_playlist(only_audio)
+                yt.download_playlist(only_audio)
             elif "watch" in self.query:
-                YouTube(self.query).download_video(only_audio)
+                yt.download_video(only_audio)
         elif "open.spotify.com" in self.query:
+            sp = Spotify(self.query)
             if "playlist" in self.query:
-                Spotify(self.query).download_playlist()
+                sp.download_playlist()
             elif "album" in self.query:
-                Spotify(self.query).download_album()
+                sp.download_album()
             elif "track" in self.query:
-                Spotify(self.query).download_song()
+                sp.download_song()
         else:
-            YouTube(self.query).download_search(only_audio)
+            yt.download_search(only_audio)
 
     # Init
     def init(self):

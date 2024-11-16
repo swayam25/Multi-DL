@@ -1,6 +1,7 @@
 import datetime, time
 import requests
 import json
+from typing import Literal
 from .youtube import AdvanceSearchDL
 from multidl import terminal
 
@@ -21,84 +22,69 @@ class Spotify:
         self.token = get_spotify_token()
         self.progress = terminal.MultiProgress()
 
-    # Get playlist info
-    def get_playlist_info(self):
-        """Get playlist info"""
+    # Fetch raw data
+    def fetch_raw(self, type: Literal["playlist", "album", "song"]):
+        id = self.url.split("/" + "track" if type == "song" else type + "/")[1]
+        api = f"{self.sp_api}/tracks/{id}" if type == "song" else f"{self.sp_api}/{type}s/{id}"
+        sp = requests.get(api, headers={"Authorization": f"Bearer {self.token}"})
+        return sp.json()
+
+    # Get info about playlist, album, song
+    def get_info(self, type: Literal["playlist", "album", "song"], data: list):
+        type = type.capitalize()
         with self.progress.live:
-            # Progress
-            task = self.progress.search.add_task("[yellow]Fetching Playlist Info[/]", total=1)
-            # Info
-            playlist_id = self.url.split("/playlist/")[1]
-            sp = requests.get(f"{self.sp_api}/playlists/{playlist_id}", headers={"Authorization": f"Bearer {self.token}"})
-            pl = sp.json()
-            pl_data = [
-                ["Name", pl['name']],
-                ["Owner", pl['owner']['display_name']],
-                ["Followers", pl['followers']['total']],
-                ["Public", pl['public']],
-                ["Collaborative", pl['collaborative']],
-                ["URL", pl['external_urls']['spotify']],
-                ["Image", pl['images'][0]['url']],
-                ["Tracks", pl['tracks']['total']],
-                ["Description", pl['description']]
-            ]
-            # Progress
-            self.progress.search.update(task, description="[green]Fetched Playlist Info[/]", completed=1)
+            task = self.progress.search.add_task(f"[yellow]Fetching {type} Info[/]", total=1)
+            self.progress.search.update(task, description=f"[green]Fetched {type} Info[/]", completed=1)
             time.sleep(1)
             self.progress.search.remove_task(task)
         # Print info
-        terminal.InfoTable("Playlist", pl_data)
+        terminal.InfoTable(type, data)
+
+    # Get playlist info
+    def get_playlist_info(self):
+        """Get playlist info"""
+        pl = self.fetch_raw("playlist")
+        pl_data = [
+            ["Name", pl['name']],
+            ["Owner", pl['owner']['display_name']],
+            ["Followers", pl['followers']['total']],
+            ["Public", pl['public']],
+            ["Collaborative", pl['collaborative']],
+            ["URL", pl['external_urls']['spotify']],
+            ["Image", pl['images'][0]['url']],
+            ["Tracks", pl['tracks']['total']],
+            ["Description", pl['description']]
+        ]
+        self.get_info("playlist", pl_data)
 
     # Get album info
     def get_album_info(self):
         """Get album info"""
-        with self.progress.live:
-            # Progress
-            task = self.progress.search.add_task("[yellow]Fetching Album Info[/]", total=1)
-            # Info
-            album_id = self.url.split("/album/")[1]
-            sp = requests.get(f"{self.sp_api}/albums/{album_id}", headers={"Authorization": f"Bearer {self.token}"})
-            album = sp.json()
-            album_data = [
-                ["Name", album['name']],
-                ["Artist", album['artists'][0]['name']],
-                ["Release Date", album['release_date']],
-                ["URL", album['external_urls']['spotify']],
-                ["Image", album['images'][0]['url']],
-                ["Tracks", album['tracks']['total']],
-            ]
-            # Progress
-            self.progress.search.update(task, description="[green]Fetched Album Info[/]", completed=1)
-            time.sleep(1)
-            self.progress.search.remove_task(task)
-        # Print info
-        terminal.InfoTable("Album", album_data)
+        album = self.fetch_raw("album")
+        album_data = [
+            ["Name", album['name']],
+            ["Artist", album['artists'][0]['name']],
+            ["Release Date", album['release_date']],
+            ["URL", album['external_urls']['spotify']],
+            ["Image", album['images'][0]['url']],
+            ["Tracks", album['tracks']['total']],
+        ]
+        self.get_info("album", album_data)
 
-    # get song info
+    # Get song info
     def get_song_info(self):
         """Get song info"""
-        with self.progress.live:
-            # Progress
-            task = self.progress.search.add_task("[yellow]Fetching Song Info[/]", total=1)
-            # Info
-            song_id = self.url.split("/track/")[1]
-            sp = requests.get(f"{self.sp_api}/tracks/{song_id}", headers={"Authorization": f"Bearer {self.token}"})
-            song = sp.json()
-            song_data = [
-                ["Name", song['name']],
-                ["Artist", song['artists'][0]['name']],
-                ["Album", song['album']['name']],
-                ["Release Date", song['album']['release_date']],
-                ["URL", song['external_urls']['spotify']],
-                ["Image", song['album']['images'][0]['url']],
-                ["Duration", str(datetime.timedelta(milliseconds=song['duration_ms']))]
-            ]
-            # Progress
-            self.progress.search.update(task, description="[green]Fetched Song Info[/]", completed=1)
-            time.sleep(1)
-            self.progress.search.remove_task(task)
-        # Print info
-        terminal.InfoTable("Song", song_data)
+        song = self.fetch_raw("song")
+        song_data = [
+            ["Name", song['name']],
+            ["Artist", song['artists'][0]['name']],
+            ["Album", song['album']['name']],
+            ["Release Date", song['album']['release_date']],
+            ["URL", song['external_urls']['spotify']],
+            ["Image", song['album']['images'][0]['url']],
+            ["Duration", str(datetime.timedelta(milliseconds=song['duration_ms']))]
+        ]
+        self.get_info("song", song_data)
 
     # Download playlist
     def download_playlist(self):
@@ -107,9 +93,7 @@ class Spotify:
             # Progress
             task = self.progress.search.add_task("[yellow]Fetching Playlist[/]", total=1)
             # Info
-            playlist_id = self.url.split("/playlist/")[1]
-            sp = requests.get(f"{self.sp_api}/playlists/{playlist_id}", headers={"Authorization": f"Bearer {self.token}"})
-            pl = sp.json()
+            pl = self.fetch_raw("playlist")
             # Progress
             self.progress.search.update(task, description="[green]Fetched Playlist[/]", completed=1)
             time.sleep(1)
@@ -139,9 +123,7 @@ class Spotify:
             # Progress
             task = self.progress.search.add_task("[yellow]Fetching Album[/]", total=1)
             # Info
-            album_id = self.url.split("/album/")[1]
-            sp = requests.get(f"{self.sp_api}/albums/{album_id}", headers={"Authorization": f"Bearer {self.token}"})
-            album = sp.json()
+            album = self.fetch_raw("album")
             # Progress
             self.progress.search.update(task, description="[green]Fetched Album[/]", completed=1)
             time.sleep(1)
@@ -151,10 +133,10 @@ class Spotify:
             for song in album['tracks']['items']:
                 # Download
                 AdvanceSearchDL(
-                    query=song['track']['name'],
+                    query=song['name'],
                     only_audio=True,
-                    thumbnail_url=song['track']['album']['images'][0]['url'],
-                    artist=song['track']['artists'][0]['name'],
+                    thumbnail_url=album['images'][0]['url'],
+                    artist=song['artists'][0]['name'],
                     pl_name=album['name'],
                     title=f"{song['name']}",
                     progress=self.progress
@@ -162,7 +144,7 @@ class Spotify:
                 # Progress
                 self.progress.playlist.update(task, advance=1)
             # Progress
-            self.progress.search.update(task, description=f"[green]Downloaded[/] [cyan]{album['name']}[/]", completed=album['tracks']['total'])
+            self.progress.playlist.update(task, description=f"[green]Downloaded[/] [cyan]{album['name']}[/]", completed=album['tracks']['total'])
 
     # download song
     def download_song(self):
@@ -171,9 +153,7 @@ class Spotify:
             # Progress
             task = self.progress.search.add_task("[yellow]Fetching Song[/]", total=1)
             # Info
-            song_id = self.url.split("/track/")[1]
-            sp = requests.get(f"{self.sp_api}/tracks/{song_id}", headers={"Authorization": f"Bearer {self.token}"})
-            song = sp.json()
+            song = self.fetch_raw("song")
             # Progress
             self.progress.search.update(task, description="[green]Fetched Song[/]", completed=1)
             time.sleep(1)

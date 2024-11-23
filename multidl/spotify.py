@@ -24,7 +24,7 @@ class Spotify:
 
     # Fetch raw data
     def fetch_raw(self, type: Literal["playlist", "album", "song"]):
-        id = self.url.split("/" + "track" if type == "song" else type + "/")[1]
+        id = self.url.split(f"/{'track' if type == 'song' else type}/")[1]
         api = f"{self.sp_api}/tracks/{id}" if type == "song" else f"{self.sp_api}/{type}s/{id}"
         sp = requests.get(api, headers={"Authorization": f"Bearer {self.token}"})
         return sp.json()

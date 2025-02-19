@@ -75,6 +75,9 @@ class MultiDL:
     def init(self):
         """Initialize Multi DL"""
         self.query = console.input("[green]Enter a link or keyword:[/] ")
+        if not self.query:
+            console.print("[red][bold]✗[/] Invalid input[/]")
+            exit()
         option = console.input("[green]Do you want to download or get info? (d/i):[/] ")
         if option == "d":
             only_audio = console.input("[green]Do you want to download only audio? [cyan italic](only for youtube)[/] (y/n):[/] ")

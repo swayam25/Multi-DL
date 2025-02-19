@@ -13,11 +13,14 @@ class MultiDL:
     :param query: Keyword or link to download or get info
     :type query: str
     """
-    def __init__(self, query: str = ""):
+    def __init__(self, query: str):
         path = shutil.which("ffmpeg")
         if path is None:
             console.print("[red][bold]✗[/] FFmpeg is not installed[/]")
             console.print("Please install [link=https://ffmpeg.org/download.html bold cyan]FFmpeg[/] to use [cyan]multidl[/]")
+            exit()
+        if not query:
+            console.print("[red][bold]✗[/] Query is empty[/]")
             exit()
         self.query = query
         self.query = re.sub(

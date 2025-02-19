@@ -33,13 +33,13 @@ class SearchTable(Table):
     Search Table Printing Util
     :param titles: Titles to be printed
     """
-    def __init__(self, titles: list):
+    def __init__(self, vids: list[dict[str, str]]):
         super().__init__(box=None)
         self.option = 1
         options = ""
         # Data arranger
-        for idx, title in enumerate(titles, start=1):
-            options += f"[white][[cyan]{idx}[/]][/] [green]{title}[/]\n"
+        for idx, vid in enumerate(vids, start=1):
+            options += f"[white][[cyan]{idx}[/]][/] [link={vid['url']} green]{vid['title']}[/]\n"
         options = options[:-1]
         # Panel
         panel = Panel.fit(

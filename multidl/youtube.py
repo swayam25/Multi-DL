@@ -1,3 +1,4 @@
+from email.policy import default
 import datetime, time
 import requests
 from rich import print
@@ -142,7 +143,7 @@ class GenerateSearchTable:
             # Progress
             task = progress.search.add_task("[yellow]Fetching Search Info[/]", total=1)
             # Info
-            video_titles = []
+            vids: list[dict[str, str]] = []
             search = []
             with YoutubeDL({
                 "quiet": True,
@@ -156,7 +157,10 @@ class GenerateSearchTable:
             if "entries" in info_dict:
                 search = info_dict['entries']
                 for entry in search:
-                    video_titles.append(entry.get('title'))
+                    vids.append({
+                        "title": entry.get('title'),
+                        "url": entry.get('url')
+                    })
             else:
                 progress.search.update(task, description="[red][bold]✗[/] No Results Found[/]", completed=1)
                 exit()
@@ -166,15 +170,19 @@ class GenerateSearchTable:
         # Ask info
         for i in range(3):
             try:
-                video_option = int(terminal.SearchTable(video_titles).get_option())
+                video_option = int(terminal.SearchTable(vids).get_option())
                 self.video_url = search[video_option - 1]['url']
                 break
-            except:
-                print(f"[red][bold]✗[/] Invalid Option [cyan]Attempt {i+1}/3[/]")
-                if i == 2: exit()
-                time.sleep(1)
-                Console().clear()
-                continue
+            except Exception as e:
+                match e.__class__.__name__:
+                    case "KeyboardInterrupt":
+                        exit()
+                    case _:
+                        print(f"[red][bold]✗[/] Invalid Option [cyan]Attempt {i+1}/3[/]")
+                        if i == 2: exit()
+                        time.sleep(1)
+                        Console().clear()
+                        continue
 
     def get_video_url(self) -> str:
         """

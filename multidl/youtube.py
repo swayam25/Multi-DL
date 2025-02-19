@@ -7,7 +7,6 @@ from mutagen.mp3 import MP3
 from mutagen.id3 import APIC, PictureType, TPE1
 from yt_dlp import YoutubeDL
 from pytube import Playlist
-from youtubesearchpython import VideosSearch
 
 class GetYTOptions:
     """
@@ -241,7 +240,7 @@ class YouTube:
                     ["Description", video_info['description']]
                 ]
                 # Progress
-                self.progress.search.update(task, description="[green]Fetched Video Info[/]", completed=1)
+                self.progress.search.update(task, descriptivideo_urlon="[green]Fetched Video Info[/]", completed=1)
                 time.sleep(1)
                 self.progress.search.remove_task(task)
             # Print info

@@ -38,8 +38,8 @@ class SearchTable(Table):
         self.option = 1
         options = ""
         # Data arranger
-        for index in range(10):
-            options += f"[white][[cyan]{index}[/]][/] [green]{titles[index]}[/]\n"
+        for idx, title in enumerate(titles, start=1):
+            options += f"[white][[cyan]{idx}[/]][/] [green]{title}[/]\n"
         options = options[:-1]
         # Panel
         panel = Panel.fit(

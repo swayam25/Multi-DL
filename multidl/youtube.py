@@ -1,5 +1,7 @@
 import datetime, time
 import requests
+from rich import print
+from rich.console import Console
 from multidl import terminal
 from mutagen.mp3 import MP3
 from mutagen.id3 import APIC, PictureType, TPE1
@@ -129,6 +131,60 @@ class AdvanceSearchDL:
             )
         self.progress.download.stop()
 
+class GenerateSearchTable:
+    """
+    Generate search table
+    :param query: search query
+    """
+    def __init__(self, query: str, progress: terminal.MultiProgress):
+        self.video_url = ""
+
+        with progress.live:
+            # Progress
+            task = progress.search.add_task("[yellow]Fetching Search Info[/]", total=1)
+            # Info
+            video_titles = []
+            search = []
+            with YoutubeDL({
+                "quiet": True,
+                "noprogress": True,
+                "ignoreerrors": True,
+                "format": "bv*+ba/best",
+                "extract_flat": True,
+                "noplaylist": True
+            }) as ytdlp:
+                info_dict: dict = ytdlp.extract_info(f"ytsearch10:{query}", download=False)
+            if "entries" in info_dict:
+                search = info_dict['entries']
+                for entry in search:
+                    video_titles.append(entry.get('title'))
+            else:
+                progress.search.update(task, description="[red][bold]✗[/] No Results Found[/]", completed=1)
+                exit()
+            progress.search.update(task, description="[green]Fetched Search Info[/]", completed=1)
+            time.sleep(1)
+            progress.search.remove_task(task)
+        # Ask info
+        for i in range(3):
+            try:
+                video_option = int(terminal.SearchTable(video_titles).get_option())
+                self.video_url = search[video_option - 1]['url']
+                break
+            except:
+                print(f"[red][bold]✗[/] Invalid Option [cyan]Attempt {i+1}/3[/]")
+                if i == 2: exit()
+                time.sleep(1)
+                Console().clear()
+                continue
+
+    def get_video_url(self) -> str:
+        """
+        Get video url
+        :rtype: str
+        """
+        return self.video_url
+
+
 class YouTube:
     """
     Core downloader class
@@ -194,22 +250,7 @@ class YouTube:
     # Get search info
     def get_search_info(self):
         """Get search info"""
-        with self.progress.live:
-            # Progress
-            task = self.progress.search.add_task("[yellow]Fetching Search Info[/]", total=1)
-            # Info
-            video_titles = []
-            search = VideosSearch(self.query, limit=10).result()['result']
-            for video in search:
-                video_titles.append(video['title'])
-            self.progress.search.update(task, description="[green]Fetched Search Info[/]", completed=1)
-            time.sleep(1)
-            self.progress.search.remove_task(task)
-        # Ask info
-        video_option = int(terminal.SearchTable(video_titles).get_option())
-        video_url = search[video_option]['link']
-        # Print info
-        self.query = video_url
+        self.query = GenerateSearchTable(self.query, self.progress).get_video_url()
         self.get_video_info()
 
     # Download playlist
@@ -280,20 +321,5 @@ class YouTube:
         Download search
         :param only_audio: download only audio
         """
-        with self.progress.live:
-            # Progress
-            task = self.progress.search.add_task("[yellow]Fetching Search[/]", total=1)
-            # Info
-            video_titles = []
-            search = VideosSearch(self.query, limit=10).result()['result']
-            for video in search:
-                video_titles.append(video['title'])
-            self.progress.search.update(task, description="[green]Fetched Search[/]", completed=1)
-            time.sleep(1)
-            self.progress.search.remove_task(task)
-        # Ask and print info
-        video_option = int(terminal.SearchTable(video_titles).get_option())
-        video_url = search[video_option]['link']
-        # Download
-        self.query = video_url
+        self.query = GenerateSearchTable(self.query, self.progress).get_video_url()
         self.download_video(only_audio)

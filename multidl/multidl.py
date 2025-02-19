@@ -1,4 +1,5 @@
 import re
+import shutil
 from .youtube import YouTube
 from .spotify import Spotify
 from .terminal import PrintMultiDLInfo
@@ -13,6 +14,11 @@ class MultiDL:
     :type query: str
     """
     def __init__(self, query: str = ""):
+        path = shutil.which("ffmpeg")
+        if path is None:
+            console.print("[red][bold]✗[/] FFmpeg is not installed[/]")
+            console.print("Please install [link=https://ffmpeg.org/download.html bold cyan]FFmpeg[/] to use [cyan]multidl[/]")
+            exit()
         self.query = query
         self.query = re.sub(
             r"(youtu\.be/|youtube\.com/shorts/|music\.youtube\.com/watch)",

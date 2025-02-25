@@ -1,4 +1,3 @@
-from email.policy import default
 import datetime, time
 import requests
 from rich import print

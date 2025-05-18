@@ -1,7 +1,6 @@
-import os
-import toml
 from .config import DEFAULT_CONFIG_PATH, MULTIDL_CONFIG
 from dataclasses import dataclass
+from importlib.metadata import metadata
 from pyfiglet import Figlet
 from rich import box
 from rich.console import Console, Group
@@ -214,12 +213,11 @@ class MultiDLInfo(Panel):
     """Multi DL info."""
 
     def __init__(self, supported_services: list[str]):
-        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        data = toml.load(os.path.join(project_root, "pyproject.toml"))
+        data = metadata("multidl")
         info = {
-            "Version": data["project"]["version"],
-            "Description": data["project"]["description"],
-            "License": data["project"]["license"],
+            "Version": data.get("Version"),
+            "Description": data.get("Summary"),
+            "License": data.get("License-Expression"),
             "Supported Services": ", ".join(supported_services),
         }
         self.art = MultiDLArt().get()

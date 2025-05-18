@@ -15,7 +15,6 @@ dependencies = [
     "pyfiglet>=1.0.2",
     "rich>=14.0.0",
     "spotipy>=2.25.1",
-    "toml>=0.10.2",
     "typer>=0.15.3",
     "yt-dlp>=2025.4.30",
 ]

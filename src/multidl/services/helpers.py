@@ -86,7 +86,9 @@ class YTDownloader:
                 )
             elif d["status"] == "finished":
                 self.progress.download.update(
-                    self.task, description=f"[green]Downloaded[/] [cyan]{self.title}[/]"
+                    self.task,
+                    description=f"[green]Downloaded[/] [cyan]{self.title}[/]",
+                    completed=d["total_bytes"],
                 )
 
 

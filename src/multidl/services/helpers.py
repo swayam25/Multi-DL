@@ -41,12 +41,13 @@ class YTDownloader:
         self.art = art
         self.artist = artist
         self.progress = progress
-        self.title: str = title if len(title) < 20 else title[:20].strip() + "..."
+        self.title = title
+        self._title = title if len(title) < 20 else title[:20].strip() + "..."
 
     def download(self):
         if self.progress is not None:
             self.task = self.progress.download.add_task(
-                description=f"[yellow]Downloading[/] [cyan]{self.title}[/]",
+                description=f"[yellow]Downloading[/] [cyan]{self._title}[/]",
                 total=0,
                 start=False,
             )
@@ -87,9 +88,9 @@ class YTDownloader:
             elif d["status"] == "finished":
                 self.progress.download.update(
                     self.task,
-                    description=f"[green]Downloaded[/] [cyan]{self.title}[/]",
-                    completed=d["total_bytes"] if "total_bytes" in d else d["downloaded_bytes"],
+                    description=f"[green]Downloaded[/] [cyan]{self._title}[/]",
                 )
+                self.progress = None
 
 
 @dataclass

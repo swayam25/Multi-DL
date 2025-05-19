@@ -56,7 +56,7 @@ A cli tool for downloading media from various platforms
 
 - Run the following command for more information
     ```sh
-    multidl config --path
+    multidl config --docs
     ```
 
 

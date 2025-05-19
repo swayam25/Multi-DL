@@ -101,7 +101,7 @@ def config(
         "-r",
         help="Reset Multi DL settings.",
     ),
-    path: bool = Option(False, "--path", "-p", help="Get docs about setting up config file path."),
+    docs: bool = Option(False, "--docs", "-d", help="Get config docs."),
 ):
     """Tweak Multi DL settings."""
     # Reset config
@@ -135,12 +135,12 @@ def config(
         Print.error("Both [cyan]Client ID[/] and [cyan]Client secret[/] are required.")
         exit(1)
 
-    # Path docs
-    if path:
+    # Config docs
+    if docs:
         ConfigPanel.print_docs()
         exit(0)
 
-    if not any([accept_spotify_tos, deny_spotify_tos, client_id, client_secret, path]):
+    if not any([accept_spotify_tos, deny_spotify_tos, client_id, client_secret, docs]):
         perms = Print.confirm(
             "Config file may contain [yellow]sensitive[/] information. Do you want to see it"
         )

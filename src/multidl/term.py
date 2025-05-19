@@ -5,6 +5,7 @@ from pyfiglet import Figlet
 from rich import box
 from rich.console import Console, Group
 from rich.live import Live
+from rich.padding import Padding
 from rich.panel import Panel
 from rich.progress import (
     BarColumn,
@@ -144,14 +145,31 @@ class ConfigPanel:
     def print_docs() -> None:
         """Print the config panel documentation."""
         panel = Panel(
-            "\n".join(
-                [
-                    "[white]Config file path can be overridden by setting the [bold cyan]MULTIDL_CONFIG[/] environment variable.[/]",
-                    f"[white]Default path is set to [bold cyan]{DEFAULT_CONFIG_PATH}[/].\n",
-                    f"[yellow]Current config file path: [bold cyan]{MULTIDL_CONFIG}[/]",
-                ]
+            Group(
+                "[bold yellow]How to set multidl config file path?[/]",
+                Padding(
+                    "\n".join(
+                        [
+                            "[white]Config file path can be overridden by setting the [cyan]MULTIDL_CONFIG[/] environment variable.[/]",
+                            f"[white]Default path is set to [cyan]{DEFAULT_CONFIG_PATH}[/].",
+                            f"[yellow]Current config file path: [cyan]{MULTIDL_CONFIG}[/]\n",
+                        ]
+                    ),
+                    (0, 0, 0, 2),
+                ),
+                "[bold yellow]How to set Spotify credentials?[/]",
+                Padding(
+                    "\n".join(
+                        [
+                            "[white]You can set Spotify credentials via both the config file and commands.[/]",
+                            "[white]It can be set using [cyan]multidl config -i <client_id> -s <client_secret>[/] command.[/]",
+                            "[white][cyan]Client ID[/] and [cyan]Client Secret[/] can be obtained from the [link=https://developer.spotify.com/dashboard/applications cyan]Spotify Developer Dashboard[/]. Refer to the [link=https://developer.spotify.com/documentation/general/guides/app-settings/ cyan]Spotify App Settings[/] for more information.[/]",
+                        ]
+                    ),
+                    (0, 0, 0, 2),
+                ),
             ),
-            title="[bold yellow]How to set multidl config file path?[/]",
+            title="[bold yellow]Config Docs[/]",
             style="yellow",
             title_align="left",
             padding=1,

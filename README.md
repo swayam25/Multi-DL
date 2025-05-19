@@ -73,6 +73,4 @@ A cli tool for downloading media from various platforms
 - Use [`uv`](https://docs.astral.sh/uv/) package manager for development.
 
 - Code Formatting
-    - Use [`ruff`](https://docs.astral.sh/ruff/) for formatting and linting.
-    - Use [`pyright`](https://microsoft.github.io/pyright/#/) for type checking.
     - Install [`ruff`](https://docs.astral.sh/ruff/editors/) and [`pyright`](https://microsoft.github.io/pyright/#/installation) extensions in your code editor and format the code before committing.

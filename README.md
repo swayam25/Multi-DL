@@ -47,7 +47,7 @@ A cli tool for downloading media from various platforms
 
 - Config file structure
     ```toml
-    spotify-tos = true # Set to true if you have accepted the Spotify TOS
+    spotify-tos = true # Set to true if you have accepted Spotify's TOS
 
     [spotify-credentials]
     client-id = "f0d56bb627ca4d3ca74645f3d8cf6c8b"

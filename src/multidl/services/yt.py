@@ -227,18 +227,19 @@ class YouTube:
             type: The type of media to download.
         """
         vid = self._fetch_info("Video", True)
-        tasks = [
-            DownloadTaskSchema(
-                query=self.query,
-                title=vid["title"],
-                type=type,
-            )
-        ]
-        Downloader(
-            tasks=tasks,
-            progress=self.progress,
-            threads=threads,
-        ).download()
+        with self.progress.live:
+            tasks = [
+                DownloadTaskSchema(
+                    query=self.query,
+                    title=vid["title"],
+                    type=type,
+                )
+            ]
+            Downloader(
+                tasks=tasks,
+                progress=self.progress,
+                threads=threads,
+            ).download()
 
     def download_channel(
         self,
@@ -252,44 +253,45 @@ class YouTube:
             type: The type of media to download.
         """
         channel = self._fetch_info("Channel", True)
-        task = self.progress.playlist.add_task(
-            f"[yellow]Downloading Channel[/] [cyan]{channel['channel']}[/]",
-            total=count_channel_entries(channel),
-        )
-        tasks = []
-        for i in channel["entries"]:
-            if i["entries"]:
-                for j in i["entries"]:
+        with self.progress.live:
+            task = self.progress.playlist.add_task(
+                f"[yellow]Downloading Channel[/] [cyan]{channel['channel']}[/]",
+                total=count_channel_entries(channel),
+            )
+            tasks = []
+            for i in channel["entries"]:
+                if i["entries"]:
+                    for j in i["entries"]:
+                        tasks.append(
+                            DownloadTaskSchema(
+                                query=j["url"],
+                                title=j["title"],
+                                type=type,
+                                album=channel["channel"],
+                                playlist=f"{channel['channel']}%dir%{i['title']}",
+                            )
+                        )
+                else:
                     tasks.append(
                         DownloadTaskSchema(
-                            query=j["url"],
-                            title=j["title"],
+                            query=i["url"],
+                            title=i["title"],
                             type=type,
                             album=channel["channel"],
-                            playlist=f"{channel['channel']}%dir%{i['title']}",
+                            playlist=channel["channel"],
                         )
                     )
-            else:
-                tasks.append(
-                    DownloadTaskSchema(
-                        query=i["url"],
-                        title=i["title"],
-                        type=type,
-                        album=channel["channel"],
-                        playlist=channel["channel"],
-                    )
-                )
-        Downloader(
-            tasks=tasks,
-            progress=self.progress,
-            playlist_task=task,
-            threads=threads,
-        ).download()
-        self.progress.playlist.update(
-            task,
-            description=f"[green]Downloaded Channel[/] [cyan]{channel['channel']}[/]",
-            completed=count_channel_entries(channel),
-        )
+            Downloader(
+                tasks=tasks,
+                progress=self.progress,
+                playlist_task=task,
+                threads=threads,
+            ).download()
+            self.progress.playlist.update(
+                task,
+                description=f"[green]Downloaded Channel[/] [cyan]{channel['channel']}[/]",
+                completed=count_channel_entries(channel),
+            )
 
     def download_search(
         self,

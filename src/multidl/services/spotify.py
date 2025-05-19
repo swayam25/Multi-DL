@@ -254,34 +254,22 @@ class Spotify:
                 completed=album["tracks"]["total"],
             )
 
-    def download_song(self, threads: int | Literal["max"] = 5) -> None:
+    def download_track(self, threads: int | Literal["max"] = 5) -> None:
         """Download spotify song."""
         song = self._fetch_info(lambda: self.sp.track(self.url), "Spotify Track")
-        task = None
-        if self.progress:
-            task = self.progress.playlist.add_task(
-                f"[yellow]Downloading Song[/] [cyan]{song['name']}[/]",
-                total=1,
-            )
-        Downloader(
-            tasks=[
-                DownloadTaskSchema(
-                    query=song["name"],
-                    title=song["name"],
-                    type="audio",
-                    art=song["album"]["images"][0]["url"],
-                    artist=song["artists"][0]["name"],
-                    album=song["album"]["name"],
-                    playlist=song["album"]["name"],
-                )
-            ],
-            progress=self.progress,
-            playlist_task=task,
-            threads=threads,
-        ).download()
-        if task:
-            self.progress.playlist.update(
-                task,
-                description=f"[green]Downloaded Song[/] [cyan]{song['name']}[/]",
-                completed=1,
-            )
+        with self.progress.live:
+            Downloader(
+                tasks=[
+                    DownloadTaskSchema(
+                        query=song["name"],
+                        title=song["name"],
+                        type="audio",
+                        art=song["album"]["images"][0]["url"],
+                        artist=song["artists"][0]["name"],
+                        album=song["album"]["name"],
+                        playlist=song["album"]["name"],
+                    )
+                ],
+                progress=self.progress,
+                threads=threads,
+            ).download()

@@ -1,24 +1,28 @@
-import json
 import os
 import platformdirs
-from dataclasses import dataclass
+import toml
 from typing import TypedDict
 
 config_path = platformdirs.user_config_dir("multidl")
-DEFAULT_CONFIG_PATH = os.path.join(config_path, "config.json")
+DEFAULT_CONFIG_PATH = os.path.join(config_path, "config.toml")
 MULTIDL_CONFIG = os.environ.get("MULTIDL_CONFIG", DEFAULT_CONFIG_PATH)
 
 
-@dataclass
-class SpotifyCredentials(TypedDict):
-    client_id: str
-    client_secret: str
+Spotify = TypedDict(
+    "Spotify",
+    {
+        "client-id": str,
+        "client-secret": str,
+    },
+)
 
-
-@dataclass
-class ConfigSchema(TypedDict):
-    spotify_credentials: SpotifyCredentials
-    spotify_tos: bool
+ConfigSchema = TypedDict(
+    "ConfigSchema",
+    {
+        "spotify-credentials": Spotify,
+        "spotify-tos": bool,
+    },
+)
 
 
 class Config:
@@ -26,8 +30,11 @@ class Config:
 
     def __init__(self):
         self.default_config: ConfigSchema = {
-            "spotify_credentials": {"client_id": "", "client_secret": ""},
-            "spotify_tos": False,
+            "spotify-tos": False,
+            "spotify-credentials": {
+                "client-id": "",
+                "client-secret": "",
+            },
         }
         if not os.path.exists(MULTIDL_CONFIG):
             self.create()
@@ -36,7 +43,7 @@ class Config:
         """Creates the config file with default values."""
         os.makedirs(os.path.dirname(MULTIDL_CONFIG), exist_ok=True)
         with open(MULTIDL_CONFIG, "a") as f:
-            json.dump(self.default_config, f, indent=4)
+            toml.dump(self.default_config, f)
 
     def reset(self) -> None:
         """Reset the config file to default values."""
@@ -46,7 +53,7 @@ class Config:
     def load(self) -> ConfigSchema:
         """Loads config from the config file."""
         with open(MULTIDL_CONFIG) as f:
-            config = json.load(f)
+            config = toml.load(f)
 
         def merge(d, default) -> ConfigSchema:
             for k, v in default.items():
@@ -66,7 +73,7 @@ class Config:
             config: The config to save.
         """
         with open(MULTIDL_CONFIG, "w") as f:
-            json.dump(config, f, indent=4)
+            toml.dump(config, f)
 
     def set_spotify_credentials(self, client_id: str, client_secret: str) -> ConfigSchema:
         """
@@ -77,9 +84,9 @@ class Config:
             client_secret: The Spotify client secret.
         """
         config = self.load()
-        config["spotify_credentials"] = {
-            "client_id": client_id,
-            "client_secret": client_secret,
+        config["spotify-credentials"] = {
+            "client-id": client_id,
+            "client-secret": client_secret,
         }
         self.save(config)
         return config
@@ -92,6 +99,6 @@ class Config:
             accept: Whether to accept the Spotify TOS.
         """
         config = self.load()
-        config["spotify_tos"] = accept
+        config["spotify-tos"] = accept
         self.save(config)
         return config

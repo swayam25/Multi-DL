@@ -65,7 +65,7 @@ class Spotify:
         data = config.load()
 
         # Check if Spotify TOS is accepted
-        if not data["spotify_tos"]:
+        if not data["spotify-tos"]:
             prompt = SpotifyTOSTable().ask()
             if not prompt:
                 Print.error("You must accept the TOS to continue.")
@@ -77,18 +77,18 @@ class Spotify:
         # Check if Spotify credentials are set
         if any(
             [
-                not data["spotify_credentials"],
-                not data["spotify_credentials"]["client_id"],
-                not data["spotify_credentials"]["client_secret"],
-                data["spotify_credentials"]["client_id"] == "",
-                data["spotify_credentials"]["client_secret"] == "",
+                not data["spotify-credentials"],
+                not data["spotify-credentials"]["client-id"],
+                not data["spotify-credentials"]["client-secret"],
+                data["spotify-credentials"]["client-id"] == "",
+                data["spotify-credentials"]["client-secret"] == "",
             ]
         ):
             Print.error("Spotify credentials not found.")
             Credentials.prompt()
         elif not Credentials(
-            data["spotify_credentials"]["client_id"],
-            data["spotify_credentials"]["client_secret"],
+            data["spotify-credentials"]["client-id"],
+            data["spotify-credentials"]["client-secret"],
         ).verify():
             Print.error("Invalid Spotify credentials.")
             Credentials.prompt()
@@ -99,8 +99,8 @@ class Spotify:
         # Initialize Spotify client
         self.sp = spotipy.Spotify(
             auth_manager=spotipy.SpotifyClientCredentials(
-                client_id=data["spotify_credentials"]["client_id"],
-                client_secret=data["spotify_credentials"]["client_secret"],
+                client_id=data["spotify-credentials"]["client-id"],
+                client_secret=data["spotify-credentials"]["client-secret"],
                 cache_handler=spotipy.cache_handler.MemoryCacheHandler(),
             )
         )

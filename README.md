@@ -39,21 +39,19 @@ A cli tool for downloading media from various platforms
 ## ⚙️ Configuration
 
 - Default Config File Path
-    - Linux: `~/.config/multidl/config.json`
-    - MacOS: `~/Library/Application Support/multidl/config.json`
-    - Windows: `%APPDATA%/multidl/config.json`
+    - Linux: `~/.config/multidl/config.toml`
+    - MacOS: `~/Library/Application Support/multidl/config.toml`
+    - Windows: `%APPDATA%/multidl/config.toml`
 
 - Config file path can be overridden by setting the `MULTIDL_CONFIG` environment variable.
 
 - Config file structure
-    ```json
-    {
-        "spotify_credentials": {
-            "client_id": "your_client_id",
-            "client_secret": "your_client_secret"
-        },
-        "spotify_tos": true // Set to true if you agree to Spotify's TOS
-    }
+    ```toml
+    spotify-tos = true # Set to true if you have accepted the Spotify TOS
+
+    [spotify-credentials]
+    client-id = "f0d56bb627ca4d3ca74645f3d8cf6c8b"
+    client-secret = "465d0aea0b094d31a84a974e5c6d9d41"
     ```
 
 - Run the following command for more information

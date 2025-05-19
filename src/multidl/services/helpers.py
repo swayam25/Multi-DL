@@ -88,7 +88,7 @@ class YTDownloader:
                 self.progress.download.update(
                     self.task,
                     description=f"[green]Downloaded[/] [cyan]{self.title}[/]",
-                    completed=d["total_bytes"],
+                    completed=d["total_bytes"] if "total_bytes" in d else d["downloaded_bytes"],
                 )
 
 

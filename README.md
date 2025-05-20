@@ -50,8 +50,8 @@ A cli tool for downloading media from various platforms
     spotify-tos = true # Set to true if you have accepted Spotify's TOS
 
     [spotify-credentials]
-    client-id = "f0d56bb627ca4d3ca74645f3d8cf6c8b"
-    client-secret = "465d0aea0b094d31a84a974e5c6d9d41"
+    client-id = ""
+    client-secret = ""
     ```
 
 - Run the following command for more information

@@ -18,8 +18,10 @@ jobs:
         with:
           python-version-file: ".python-version"
 
-      - name: Build release distributions
+      - name: Set up uv
         uses: astral-sh/setup-uv@v5
+
+      - name: Build release distributions
         run: |
           uv build
 

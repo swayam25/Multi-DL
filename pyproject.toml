@@ -23,6 +23,11 @@ dependencies = [
 [project.scripts]
 multidl = "multidl.__main__:app"
 
+[project.urls]
+Homepage = "https://github.com/swayam25/Multi-DL"
+GitHub = "https://github.com/swayam25/Multi-DL"
+
+
 [tool.ruff]
 line-length = 100
 

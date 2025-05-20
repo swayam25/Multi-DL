@@ -1,6 +1,6 @@
 <div align="center">
 
-![](./assets/banner.png)
+![Multi DL](https://github.com/swayam25/Multi-DL/raw/main/assets/banner.png)
 
 A cli tool for downloading media from various platforms
 

@@ -1,6 +1,6 @@
 <div align="center">
 
-![Multi DL](./assets/banner.png)
+![](./assets/banner.png)
 
 A cli tool for downloading media from various platforms
 

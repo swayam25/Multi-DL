@@ -1,4 +1,4 @@
-from .config import DEFAULT_CONFIG_PATH, MULTIDL_CONFIG
+from .config import DEFAULT_CONFIG_PATH, MULTIDL_CONFIG, Config
 from dataclasses import dataclass
 from importlib.metadata import metadata
 from pyfiglet import Figlet
@@ -124,6 +124,7 @@ class ConfigPanel:
     @staticmethod
     def print_config() -> None:
         """Print the config panel."""
+        Config()
         panel = Panel(
             Syntax.from_path(
                 MULTIDL_CONFIG,

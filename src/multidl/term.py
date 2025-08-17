@@ -76,7 +76,7 @@ class SearchTable(Table):
         console.print(panel)
         self.option = int(
             Print.input(
-                f"Enter the option number [[cyan]1-{len(data) + 1}[/]]",
+                f"Enter the option number [[cyan]1-{len(data)}[/]]",
                 choices=[str(i) for i in range(1, len(data) + 1)],
             )
         )

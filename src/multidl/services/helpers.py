@@ -95,10 +95,15 @@ class YTDownloader:
     def hook(self, d):
         """Hook for yt-dlp to update the progress bar."""
         if self.progress is not None:
-            total: int = 0
+            total: int = (
+                d["total_bytes"]
+                if "total_bytes" in d
+                else d["downloaded_bytes"] + 1
+                if "downloaded_bytes" in d
+                else 0
+            )
             self.progress.download.start_task(self.task) if "total_bytes" in d else None
             if d["status"] == "downloading":
-                total = d["total_bytes"] if "total_bytes" in d else d["downloaded_bytes"] + 1
                 self.progress.download.update(
                     self.task,
                     description=f"[yellow]Downloading[/] [cyan]{self._title}[/]",

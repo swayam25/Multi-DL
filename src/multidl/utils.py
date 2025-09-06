@@ -106,6 +106,7 @@ class YTOptions:
 
         Parameters:
             info_dict: The yt-dlp info dictionary to modify.
+            title: Title to set.
             artist: Artist name to set.
             album: Album name to set.
             cover_url: Cover art URL to set.
@@ -120,14 +121,11 @@ class YTOptions:
         if album:
             info_dict["meta_album"] = album
         if cover_url:
-            if "thumbnails" not in info_dict or not info_dict["thumbnails"]:
-                info_dict["thumbnails"] = []
-            info_dict["thumbnails"].insert(
-                0,
+            info_dict["thumbnails"] = [
                 {
                     "url": cover_url,
                     "id": "custom_cover",
                     "preference": 1000,  # High preference to ensure it's selected
                 },
-            )
+            ]
         return info_dict

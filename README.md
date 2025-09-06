@@ -8,7 +8,6 @@ A cli tool for downloading media from various platforms
 
 ## 🎯 Features
 
-- Supports `YouTube` & `Spotify` (*more platforms coming soon*).
 - Obtain information about any video, music, playlist, album, channel, etc...
 - Ability to download whole youtube channel.
 - Supports parallel downloads.

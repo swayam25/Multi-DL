@@ -1,10 +1,24 @@
-import base64
-import requests
-from .term import Print
-from mutagen.flac import Picture
-from mutagen.mp4 import MP4, MP4Tags
-from mutagen.oggvorbis import OggVorbis
 from typing import Literal
+
+
+class SuppressLogger:
+    """Custom logger to suppress all yt-dlp output including warnings."""
+
+    def debug(self, msg):
+        """Suppress debug messages."""
+        pass
+
+    def info(self, msg):
+        """Suppress info messages."""
+        pass
+
+    def warning(self, msg):
+        """Suppress warning messages."""
+        pass
+
+    def error(self, msg):
+        """Suppress error messages."""
+        pass
 
 
 def sanitize_path(path: str) -> str:
@@ -20,8 +34,9 @@ class YTOptions:
     """
     Get the options for yt-dlp.
 
-    Args:
+    Parameters:
         type: The type of media to download.
+        subtitles: List of subtitles to download.
         dir: The directory to save the file.
         filename: The filename to save the file as.
         progress_hooks: A list of progress hooks to use.
@@ -30,6 +45,7 @@ class YTOptions:
     def __init__(
         self,
         type: Literal["audio", "video", "default"] = "default",
+        subtitles: list[str] | None = None,
         dir: str = ".",
         filename: str = "%(title)s",
         progress_hooks: list | None = None,
@@ -43,24 +59,36 @@ class YTOptions:
             "quiet": True,
             "noprogress": True,
             "ignoreerrors": True,
+            "no_warnings": True,
+            "logger": SuppressLogger(),
+            "logtostderr": False,
             "format": "bv*+ba[ext=mp4]/best",
             "outtmpl": f"{safe_dir}/{safe_filename}.%(ext)s",
             "postprocessors": [],
         }
-        if type == "audio":
+        if subtitles and type != "audio":  # Embed subtitles only for video or default type
+            yt_options["writesubtitles"] = True
+            yt_options["writeautomaticsub"] = True
+            yt_options["subtitleslangs"] = list(subtitles)
+            yt_options["postprocessors"].append({"key": "FFmpegEmbedSubtitle"})
+        if type == "audio":  # Download audio only
             yt_options["format"] = "ba[ext=m4a]/ba"
             yt_options["postprocessors"].append(
                 {"key": "FFmpegExtractAudio", "preferredcodec": "vorbis", "preferredquality": "0"}
             )
-        elif type == "video":
-            yt_options["format"] = "bv[ext=mp4]/bv"
-            yt_options["postprocessors"].append(
-                {"key": "FFmpegVideoConvertor", "preferedformat": "mp4"}
-            )
         else:
+            if type == "video":  # Download video only
+                yt_options["format"] = "bv[ext=mp4]/bv"
             yt_options["postprocessors"].append(
                 {"key": "FFmpegVideoConvertor", "preferedformat": "mp4"}
             )
+        # Embed thumbnail and metadata in both audio and video
+        yt_options["postprocessors"].extend(
+            [
+                {"key": "EmbedThumbnail"},
+                {"key": "FFmpegMetadata"},
+            ]
+        )
         if progress_hooks:
             yt_options["progress_hooks"] = progress_hooks
         self.yt_options = yt_options
@@ -69,49 +97,37 @@ class YTOptions:
         """Get the options for yt-dlp."""
         return self.yt_options
 
+    @staticmethod
+    def inject_metadata(
+        info_dict: dict, title: str = "", artist: str = "", album: str = "", cover_url: str = ""
+    ) -> dict:
+        """
+        Inject custom metadata into yt-dlp info dictionary.
 
-class AddMetaData:
-    """
-    Add metadata to the file.
+        Parameters:
+            info_dict: The yt-dlp info dictionary to modify.
+            artist: Artist name to set.
+            album: Album name to set.
+            cover_url: Cover art URL to set.
 
-    Args:
-        file: The file to add metadata to.
-        artist: The artist name of the file.
-        album: The album name of the file.
-        art: The cover art url of the file.
-    """
-
-    def __init__(self, file: str, artist: str, album: str, art: str):
-        if file.endswith(".ogg"):
-            audio = OggVorbis(file)
-            img: bytes = requests.get(art).content
-
-            pic = Picture()
-            pic.data = img
-            pic.type = 17
-            pic.desc = "Cover Art"
-            pic.mime = "image/jpeg"
-
-            pic_data = pic.write()
-            encoded_data = base64.b64encode(pic_data)
-            vcomment_value = encoded_data.decode("ascii")
-
-            audio["metadata_block_picture"] = [vcomment_value]
-            audio["coverart"] = [vcomment_value]
-            audio["album"] = album
-            audio["artist"] = artist
-            audio.save()
-
-        elif file.endswith(".mp4"):
-            video = MP4(file)
-            if video.tags is None:
-                video.tags = MP4Tags()
-            video.tags["\xa9alb"] = album
-            video.tags["\xa9ART"] = artist
-            video.tags["covr"] = [requests.get(art).content]
-            video.save()
-
-        else:
-            Print.error(f'".{file.split(".")[-1]}" is not a supported file type.')
-            Print.warn("Please use [cyan].ogg[/] or [cyan].mp4[/] files.")
-            exit()
+        Returns:
+            Modified info dictionary
+        """
+        if title:
+            info_dict["title"] = title
+        if artist:
+            info_dict["meta_artist"] = artist
+        if album:
+            info_dict["meta_album"] = album
+        if cover_url:
+            if "thumbnails" not in info_dict or not info_dict["thumbnails"]:
+                info_dict["thumbnails"] = []
+            info_dict["thumbnails"].insert(
+                0,
+                {
+                    "url": cover_url,
+                    "id": "custom_cover",
+                    "preference": 1000,  # High preference to ensure it's selected
+                },
+            )
+        return info_dict

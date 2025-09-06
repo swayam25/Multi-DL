@@ -4,6 +4,7 @@ import spotipy
 from ..config import Config
 from ..term import InfoTable, Print, ProgressBar, SpotifyTOSTable
 from .helpers import Downloader, DownloadTaskSchema
+from types import FunctionType
 from typing import Literal
 
 
@@ -11,7 +12,7 @@ class Credentials:
     """
     Spotify credentials class for verifying credentials.
 
-    Args:
+    Parameters:
         client_id: The Spotify client ID.
         client_secret: The Spotify client secret.
     """
@@ -53,7 +54,7 @@ class Spotify:
     """
     Spotify class for downloading media using spotify data.
 
-    Args:
+    Parameters:
         query: The search query for the media.
     """
 
@@ -105,10 +106,10 @@ class Spotify:
             )
         )
 
-    def _fetch_info(self, fetch_fn, title: str):
+    def _fetch_info(self, fetch_fn: FunctionType) -> dict:
         """Unified method to fetch Spotify info with progress bar and error handling."""
         with self.progress.live:
-            task = self.progress.search.add_task(f"[yellow]Fetching {title}[/]", total=1)
+            task = self.progress.search.add_task("[yellow]Fetching[/]", total=1)
             try:
                 info = fetch_fn()
             except Exception:
@@ -118,13 +119,13 @@ class Spotify:
                     task, description="[red][bold]✗[/] No Results Found[/]", completed=1
                 )
                 exit(1)
-            self.progress.search.update(task, description=f"[green]Fetched {title}[/]", completed=1)
+            self.progress.search.update(task, description="[green]Fetched[/]", completed=1)
             self.progress.search.remove_task(task)
         return info
 
     def info_pl(self) -> None:
         """Get spotify playlist info."""
-        pl = self._fetch_info(lambda: self.sp.playlist(self.url), "Spotify Playlist Info")
+        pl = self._fetch_info(lambda: self.sp.playlist(self.url))
         data: list[tuple[str, str]] = [
             ("Name", pl["name"]),
             ("Owner", f"[link={pl['owner']['href']}]{pl['owner']['display_name']}[/]"),
@@ -143,7 +144,7 @@ class Spotify:
 
     def info_album(self) -> None:
         """Get spotify album info."""
-        album = self._fetch_info(lambda: self.sp.album(self.url), "Spotify Album Info")
+        album = self._fetch_info(lambda: self.sp.album(self.url))
         data: list[tuple[str, str]] = [
             ("Name", album["name"]),
             ("Artist", album["artists"][0]["name"]),
@@ -159,7 +160,7 @@ class Spotify:
 
     def info_track(self) -> None:
         """Get spotify track info."""
-        track = self._fetch_info(lambda: self.sp.track(self.url), "Spotify Track Info")
+        track = self._fetch_info(lambda: self.sp.track(self.url))
         data: list[tuple[str, str]] = [
             ("Name", track["name"]),
             ("Artist", track["artists"][0]["name"]),
@@ -180,7 +181,7 @@ class Spotify:
     def info_user(self) -> None:
         """Get spotify profile info."""
         user_id = self.url.split("/")[-1]
-        user = self._fetch_info(lambda: self.sp.user(user_id), "Spotify Profile Info")
+        user = self._fetch_info(lambda: self.sp.user(user_id))
         data: list[tuple[str, str]] = [
             ("Name", user["display_name"]),
             ("Followers", user["followers"]["total"]),
@@ -194,7 +195,7 @@ class Spotify:
 
     def download_pl(self, threads: int | Literal["max"] = 5) -> None:
         """Download spotify playlist."""
-        pl = self._fetch_info(lambda: self.sp.playlist(self.url), "Spotify Playlist")
+        pl = self._fetch_info(lambda: self.sp.playlist(self.url))
         with self.progress.live:
             task = self.progress.playlist.add_task(
                 f"[yellow]Downloading[/] [cyan]{pl['name']}[/]", total=pl["tracks"]["total"]
@@ -204,7 +205,7 @@ class Spotify:
                     query=track["track"]["name"],
                     title=track["track"]["name"],
                     type="audio",
-                    art=track["track"]["album"]["images"][0]["url"],
+                    cover_url=track["track"]["album"]["images"][0]["url"],
                     artist=track["track"]["artists"][0]["name"],
                     album=track["track"]["album"]["name"],
                     playlist=pl["name"],
@@ -225,7 +226,7 @@ class Spotify:
 
     def download_album(self, threads: int | Literal["max"] = 5) -> None:
         """Download spotify album."""
-        album = self._fetch_info(lambda: self.sp.album(self.url), "Spotify Album")
+        album = self._fetch_info(lambda: self.sp.album(self.url))
         with self.progress.live:
             task = self.progress.playlist.add_task(
                 f"[yellow]Downloading[/] [cyan]{album['name']}[/]", total=album["tracks"]["total"]
@@ -235,7 +236,7 @@ class Spotify:
                     query=song["name"],
                     title=song["name"],
                     type="audio",
-                    art=album["images"][0]["url"],
+                    cover_url=album["images"][0]["url"],
                     artist=song["artists"][0]["name"],
                     album=album["name"],
                     playlist=album["name"],
@@ -256,7 +257,7 @@ class Spotify:
 
     def download_track(self, threads: int | Literal["max"] = 5) -> None:
         """Download spotify song."""
-        song = self._fetch_info(lambda: self.sp.track(self.url), "Spotify Track")
+        song = self._fetch_info(lambda: self.sp.track(self.url))
         with self.progress.live:
             Downloader(
                 tasks=[
@@ -264,10 +265,9 @@ class Spotify:
                         query=song["name"],
                         title=song["name"],
                         type="audio",
-                        art=song["album"]["images"][0]["url"],
+                        cover_url=song["album"]["images"][0]["url"],
                         artist=song["artists"][0]["name"],
                         album=song["album"]["name"],
-                        playlist=song["album"]["name"],
                     )
                 ],
                 progress=self.progress,

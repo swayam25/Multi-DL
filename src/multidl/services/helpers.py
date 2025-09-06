@@ -1,6 +1,6 @@
 import os
 from ..term import Print, ProgressBar
-from ..utils import AddMetaData, YTOptions
+from ..utils import YTOptions
 from dataclasses import dataclass
 from rich.progress import TaskID
 from threading import Thread
@@ -12,14 +12,15 @@ class YTDownloader:
     """
     Downloader class for downloading media. Uses yt-dlp to download media from YouTube.
 
-    Args:
+    Parameters:
         query: The query string to be used for searching.
-        type: The type of media to download.
-        playlist: The playlist folder name to save the media to.
-        album: The album name of the media.
         title: The title of the media.
-        art: The cover art url of the media.
+        type: The type of media to download.
+        album: The album name of the media.
+        playlist: The playlist folder name to save the media to.
+        cover_url: The cover art URL to set.
         artist: The artist of the media.
+        subtitles: List of subtitles to download.
         progress: A progress bar to use for downloading.
     """
 
@@ -30,16 +31,18 @@ class YTDownloader:
         type: Literal["audio", "video", "default"] = "default",
         album: str = "",
         playlist: str = ".",
-        art: str = "",
+        cover_url: str = "",
         artist: str = "",
+        subtitles: list[str] | None = None,
         progress: ProgressBar | None = None,
     ):
         self.query = query
         self.type: Literal["audio", "video", "default"] = type
         self.album = album
         self.playlist = playlist
-        self.art = art
+        self.cover_url = cover_url
         self.artist = artist
+        self.subtitles = subtitles
         self.progress = progress
         self.title = title
         self._title = title if len(title) < 20 else title[:20].strip() + "..."
@@ -54,26 +57,40 @@ class YTDownloader:
         is_url: bool = (
             self.query.startswith("http") or self.query.startswith("www")
         ) and "youtube" in self.query
-        yt_opts = YTOptions(self.type, self.playlist, self.title, progress_hooks=[self.hook]).get()
+        yt_opts = YTOptions(
+            type=self.type,
+            subtitles=self.subtitles,
+            dir=self.playlist,
+            filename=self.title,
+            progress_hooks=[self.hook],
+        ).get()
         with YoutubeDL(yt_opts) as ydl:
-            yt = ydl.extract_info(f"ytsearch:{self.query}" if not is_url else self.query)
+            yt = ydl.extract_info(
+                # Checking url here adds support for non-YouTube URLs. Custom sources have dedicated downloaders.
+                f"{'' if self.query.startswith('http://') or self.query.startswith('https://') else 'ytsearch:'}{self.query}"
+                if not is_url
+                else self.query
+            )
         if not yt:
             Print.error(f"No results found for the query [cyan]{self.query}[/].")
             exit(1)
         file_entry = yt["entries"][0] if isinstance(yt, dict) and "entries" in yt else yt
-        if file_entry:
-            AddMetaData(
-                file_entry["requested_downloads"][0]["filepath"],
-                self.artist if self.artist else file_entry["uploader"],
-                self.album
-                if self.album
-                else (
-                    file_entry["playlist"]
-                    if "playlist" in file_entry and file_entry["playlist"]
-                    else ""
-                ),
-                self.art if self.art else file_entry["thumbnails"][0]["url"],
-            )
+
+        # Inject custom metadata
+        artist = self.artist if self.artist else file_entry.get("uploader", "")
+        album = (
+            self.album
+            if self.album
+            else (file_entry.get("playlist", "") if file_entry.get("playlist") else "")
+        )
+        cover_url = (
+            self.cover_url
+            if self.cover_url
+            else (file_entry["thumbnails"][0]["url"] if file_entry.get("thumbnails") else "")
+        )
+        YTOptions.inject_metadata(file_entry, self.title, artist, album, cover_url)
+
+        ydl.process_info(file_entry)
 
     def hook(self, d):
         """Hook for yt-dlp to update the progress bar."""
@@ -84,6 +101,7 @@ class YTDownloader:
                 total = d["total_bytes"] if "total_bytes" in d else d["downloaded_bytes"] + 1
                 self.progress.download.update(
                     self.task,
+                    description=f"[yellow]Downloading[/] [cyan]{self._title}[/]",
                     total=total,
                     completed=d["downloaded_bytes"],
                 )
@@ -91,9 +109,8 @@ class YTDownloader:
                 self.progress.download.update(
                     self.task,
                     description=f"[green]Downloaded[/] [cyan]{self._title}[/]",
-                    completed=total if total else d["downloaded_bytes"] + 1,
+                    completed=total,
                 )
-                self.progress = None
 
 
 @dataclass
@@ -103,8 +120,9 @@ class DownloadTaskSchema(TypedDict):
     type: NotRequired[str]
     album: NotRequired[str]
     playlist: NotRequired[str]
-    art: NotRequired[str]
+    cover_url: NotRequired[str]
     artist: NotRequired[str]
+    subtitles: NotRequired[list[str] | None]
 
 
 class Downloader:
@@ -118,7 +136,7 @@ class Downloader:
         threads: int | Literal["max"] = 5,
     ):
         """
-        Args:
+        Parameters:
             tasks: Single or multiple download tasks.
             progress: Progress bar instance.
             playlist_task: Task ID for playlist progress.
@@ -154,8 +172,9 @@ class Downloader:
                 type=yt_type,
                 album=task.get("album", ""),
                 playlist=task.get("playlist", "."),
-                art=task.get("art", ""),
+                cover_url=task.get("cover_url", ""),
                 artist=task.get("artist", ""),
+                subtitles=task.get("subtitles", None),
                 progress=self.progress,
             ).download()
         if self.progress is not None and self.playlist_task is not None:

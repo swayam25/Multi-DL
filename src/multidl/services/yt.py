@@ -1,5 +1,6 @@
 import datetime
 from ..term import InfoTable, ProgressBar, SearchTable
+from ..utils import SuppressLogger
 from .helpers import Downloader, DownloadTaskSchema
 from typing import Literal
 from yt_dlp import YoutubeDL
@@ -17,7 +18,7 @@ class Search:
     """
     Search videos from YouTube.
 
-    Args:
+    Parameters:
         query: Query string to search for.
         progress: A progress bar to use for downloading.
     """
@@ -30,7 +31,7 @@ class Search:
         self.url: str | None = None
 
         with progress.live:
-            task = progress.search.add_task("[yellow]Searching for videos[/]", total=1)
+            task = progress.search.add_task("[yellow]Searching[/]", total=1)
             self.vids: list[dict[str, str]] = []
 
             with YoutubeDL(
@@ -38,6 +39,9 @@ class Search:
                     "quiet": True,
                     "noprogress": True,
                     "ignoreerrors": True,
+                    "no_warnings": True,
+                    "logger": SuppressLogger(),
+                    "logtostderr": False,
                     "format": "bv*+ba/best",
                     "extract_flat": True,
                     "noplaylist": True,
@@ -67,7 +71,7 @@ class YouTube:
     """
     YouTube class for downloading media from YouTube.
 
-    Args:
+    Parameters:
         query: The query string to be used for searching.
     """
 
@@ -77,13 +81,20 @@ class YouTube:
 
     def _fetch_info(
         self,
-        title: str,
         extract_flat: bool | Literal["in_playlist", "discard", "discard_in_playlist"] = False,
     ) -> dict:
         """Unified method to fetch info with progress bar and error handling."""
-        ydl_opts = {"quiet": True, "noerrors": True, "extract_flat": extract_flat}
+        ydl_opts = {
+            "quiet": True,
+            "noprogress": True,
+            "ignoreerrors": True,
+            "no_warnings": True,
+            "logger": SuppressLogger(),
+            "logtostderr": False,
+            "extract_flat": extract_flat,
+        }
         with self.progress.live:
-            task = self.progress.search.add_task(f"[yellow]Fetching {title}[/]", total=1)
+            task = self.progress.search.add_task("[yellow]Fetching[/]", total=1)
             with YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(self.query, download=False)
                 if not info:
@@ -93,7 +104,7 @@ class YouTube:
                     exit(1)
                 self.progress.search.update(
                     task,
-                    description=f"[green]Fetched {title}[/]",
+                    description="[green]Fetched[/]",
                     completed=1,
                 )
                 self.progress.search.remove_task(task)
@@ -101,7 +112,7 @@ class YouTube:
 
     def info_pl(self) -> None:
         """Get the playlist info."""
-        pl = self._fetch_info("Playlist Info", "in_playlist")
+        pl = self._fetch_info("in_playlist")
         pl_data: list[tuple[str, str]] = [
             ("Title", str(pl["title"])),
             ("Channel", str(pl["channel"])),
@@ -122,7 +133,7 @@ class YouTube:
 
     def info_video(self) -> None:
         """Get the video info."""
-        video = self._fetch_info("Video Info", True)
+        video = self._fetch_info(True)
         video_data: list[tuple[str, str]] = [
             ("Title", str(video["title"])),
             ("Length", str(datetime.timedelta(seconds=video["duration"]))),
@@ -145,7 +156,7 @@ class YouTube:
 
     def info_channel(self) -> None:
         """Get the channel info."""
-        channel = self._fetch_info("Channel Info", True)
+        channel = self._fetch_info(True)
         avatar_list = [i for i in channel["thumbnails"] if i["id"] == "avatar_uncropped"]
         avatar = avatar_list[0]["url"] if avatar_list else ""
         banner_list = [i for i in channel["thumbnails"] if i["id"] == "banner_uncropped"]
@@ -179,15 +190,16 @@ class YouTube:
     def download_pl(
         self,
         type: Literal["audio", "video", "default"] = "default",
+        subtitles: list[str] | None = None,
         threads: int | Literal["max"] = 5,
     ) -> None:
         """
         Download the playlist.
 
-        Args:
+        Parameters:
             type: The type of media to download.
         """
-        pl = self._fetch_info("Playlist", "in_playlist")
+        pl = self._fetch_info("in_playlist")
         with self.progress.live:
             task = self.progress.playlist.add_task(
                 f"[yellow]Downloading Playlist[/] [cyan]{pl['title']}[/]",
@@ -200,6 +212,7 @@ class YouTube:
                     type=type,
                     album=pl["title"],
                     playlist=pl["title"],
+                    subtitles=subtitles,
                 )
                 for i in pl["entries"]
             ]
@@ -218,21 +231,23 @@ class YouTube:
     def download_video(
         self,
         type: Literal["audio", "video", "default"] = "default",
+        subtitles: list[str] | None = None,
         threads: int | Literal["max"] = 5,
     ) -> None:
         """
         Download the video.
 
-        Args:
+        Parameters:
             type: The type of media to download.
         """
-        vid = self._fetch_info("Video", True)
+        vid = self._fetch_info(True)
         with self.progress.live:
             tasks = [
                 DownloadTaskSchema(
                     query=self.query,
                     title=vid["title"],
                     type=type,
+                    subtitles=subtitles,
                 )
             ]
             Downloader(
@@ -244,15 +259,16 @@ class YouTube:
     def download_channel(
         self,
         type: Literal["audio", "video", "default"] = "default",
+        subtitles: list[str] | None = None,
         threads: int | Literal["max"] = 5,
     ) -> None:
         """
         Download the channel.
 
-        Args:
+        Parameters:
             type: The type of media to download.
         """
-        channel = self._fetch_info("Channel", True)
+        channel = self._fetch_info(True)
         with self.progress.live:
             task = self.progress.playlist.add_task(
                 f"[yellow]Downloading Channel[/] [cyan]{channel['channel']}[/]",
@@ -269,6 +285,7 @@ class YouTube:
                                 type=type,
                                 album=channel["channel"],
                                 playlist=f"{channel['channel']}%dir%{i['title']}",
+                                subtitles=subtitles,
                             )
                         )
                 else:
@@ -296,13 +313,14 @@ class YouTube:
     def download_search(
         self,
         type: Literal["audio", "video", "default"] = "default",
+        subtitles: list[str] | None = None,
         threads: int | Literal["max"] = 5,
     ) -> None:
         """
         Download the search result.
 
-        Args:
+        Parameters:
             type: The type of media to download.
         """
         self.query = Search(self.query, self.progress).get()
-        self.download_video(type, threads)
+        self.download_video(type, subtitles, threads)

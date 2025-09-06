@@ -1,10 +1,10 @@
-from . import __all__
 from .config import Config
 from .core import MultiDL
 from .services.spotify import Credentials
 from .term import ConfigPanel, MultiDLInfo, Print
+from trogon.typer import init_tui
 from typer import Argument, Exit, Option, Typer
-from typing import Literal
+from typing import Annotated, Literal
 
 # Typer init
 app = Typer(
@@ -17,15 +17,22 @@ app = Typer(
 def version_callback(value: bool):
     """Version callback for Typer global option."""
     if value:
-        MultiDLInfo(__all__).print()
+        MultiDLInfo().print()
         raise Exit()
 
 
 @app.callback()
 def main(
-    version: bool = Option(
-        None, "--version", "-v", callback=version_callback, is_eager=True, help="Shows version."
-    ),
+    version: Annotated[
+        bool,
+        Option(
+            "--version",
+            "-v",
+            callback=version_callback,
+            is_eager=True,
+            help="Shows version.",
+        ),
+    ] = False,
 ):
     pass
 
@@ -33,29 +40,42 @@ def main(
 @app.command()
 def version():
     """Shows Multi DL version."""
-    MultiDLInfo(__all__).print()
+    MultiDLInfo().print()
 
 
 @app.command()
-def info(query: str = Argument(..., help="Keyword or link to get info")):
+def info(query: Annotated[str, Argument(..., help="Keyword or link to get info")]):
     """Get info about any media via link, keywords etc..."""
     MultiDL(query).info()
 
 
 @app.command()
 def download(
-    query: str = Argument(..., help="Keyword or link to download"),
-    audio: bool = Option(False, "--audio", "-a", help="Download only audio (only for youtube)."),
-    video: bool = Option(False, "--video", "-v", help="Download only video (only for youtube)."),
-    threads: str = Option(
-        5,
-        "--threads",
-        "-t",
-        help="Number of threads to use for downloading. Use 'max' for maximum threads..",
-    ),
+    query: Annotated[str, Argument(..., help="Keyword or link to download")],
+    audio: Annotated[
+        bool, Option("--audio", "-a", help="Download audio only (YouTube only).")
+    ] = False,
+    video: Annotated[
+        bool, Option("--video", "-v", help="Download video only (YouTube only).")
+    ] = False,
+    subtitles: Annotated[
+        list[str] | None,
+        Option(
+            "--subtitles",
+            "-s",
+            help="Subtitle languages to download for the video (YouTube only). Use 'all' to download all available subtitles.",
+        ),
+    ] = None,
+    threads: Annotated[
+        str,
+        Option(
+            "--threads",
+            "-t",
+            help="Number of threads to use for downloading. Use 'max' for maximum threads.",
+        ),
+    ] = "5",
 ):
     """Download any media via link, keywords etc..."""
-    threads = threads.lower()
     _threads: int | Literal["max"]
     if threads != "max" and not threads.isdigit():
         Print.error(
@@ -67,41 +87,59 @@ def download(
         Print.error("Thread count must be at least 1. Using [cyan]1[/] thread instead.")
     MultiDL(query).download(
         type="audio" if audio else "video" if video else "default",
+        subtitles=subtitles,
         threads=_threads,
     )
 
 
 @app.command()
 def config(
-    accept_spotify_tos: bool = Option(
-        False,
-        "--accept-spotify-tos",
-        help="Accept Spotify TOS.",
-    ),
-    deny_spotify_tos: bool = Option(
-        False,
-        "--deny-spotify-tos",
-        help="Deny Spotify TOS.",
-    ),
-    client_id: str = Option(
-        None,
-        "--client-id",
-        "-i",
-        help="Spotify client ID.",
-    ),
-    client_secret: str = Option(
-        None,
-        "--client-secret",
-        "-s",
-        help="Spotify client secret.",
-    ),
-    reset: bool = Option(
-        False,
-        "--reset",
-        "-r",
-        help="Reset Multi DL settings.",
-    ),
-    docs: bool = Option(False, "--docs", "-d", help="Get config docs."),
+    accept_spotify_tos: Annotated[
+        bool,
+        Option(
+            "--accept-spotify-tos",
+            help="Accept Spotify TOS.",
+        ),
+    ] = False,
+    deny_spotify_tos: Annotated[
+        bool,
+        Option(
+            "--deny-spotify-tos",
+            help="Deny Spotify TOS.",
+        ),
+    ] = False,
+    client_id: Annotated[
+        str | None,
+        Option(
+            "--client-id",
+            "-i",
+            help="Spotify client ID.",
+        ),
+    ] = None,
+    client_secret: Annotated[
+        str | None,
+        Option(
+            "--client-secret",
+            "-s",
+            help="Spotify client secret.",
+        ),
+    ] = None,
+    reset: Annotated[
+        bool,
+        Option(
+            "--reset",
+            "-r",
+            help="Reset Multi DL settings.",
+        ),
+    ] = False,
+    docs: Annotated[
+        bool,
+        Option(
+            "--docs",
+            "-d",
+            help="Get config docs.",
+        ),
+    ] = False,
 ):
     """Tweak Multi DL settings."""
     # Reset config
@@ -149,6 +187,8 @@ def config(
         else:
             Print.error("Permission denied.")
 
+
+init_tui(app)
 
 if __name__ == "__main__":
     app()

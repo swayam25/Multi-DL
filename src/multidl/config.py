@@ -69,7 +69,7 @@ class Config:
         """
         Save the config to the config file.
 
-        Args:
+        Parameters:
             config: The config to save.
         """
         with open(MULTIDL_CONFIG, "w") as f:
@@ -79,7 +79,7 @@ class Config:
         """
         Set Spotify credentials in the config file.
 
-        Args:
+        Parameters:
             client_id: The Spotify client ID.
             client_secret: The Spotify client secret.
         """
@@ -95,7 +95,7 @@ class Config:
         """
         Accept Spotify TOS in the config file.
 
-        Args:
+        Parameters:
             accept: Whether to accept the Spotify TOS.
         """
         config = self.load()

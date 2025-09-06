@@ -1,6 +1,6 @@
 [project]
 name = "multidl"
-version = "2.0.4"
+version = "2.1.0"
 description = "A cli tool for downloading media from various platforms."
 license = "GPL-3.0"
 readme = "README.md"
@@ -8,7 +8,7 @@ authors = [{ name = "Swayam" }]
 requires-python = ">=3.13"
 dependencies = [
     "aiohttp>=3.11.18",
-    "click<8.2.0",
+    "click>=8.2.0",
     "ffmpeg>=1.4",
     "mutagen>=1.47.0",
     "platformdirs>=4.3.8",
@@ -16,6 +16,7 @@ dependencies = [
     "rich>=14.0.0",
     "spotipy>=2.25.1",
     "toml>=0.10.2",
+    "trogon>=0.6.0",
     "typer>=0.15.3",
     "yt-dlp>=2025.4.30",
 ]

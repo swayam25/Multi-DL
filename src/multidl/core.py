@@ -10,7 +10,7 @@ class MultiDL:
     """
     Core class for Multi DL.
 
-    Args:
+    Parameters:
         query: The query string to be used for searching.
     """
 
@@ -35,7 +35,7 @@ class MultiDL:
         """
         Dispatches the appropriate handler based on the query and a custom formatter.
 
-        Args:
+        Parameters:
             handlers: Mapping of key substrings to (handler object, keywords list) tuples.
             formatter: Formatter string for the function name, e.g. "info_{f}" or "download_{f}". "{f}" refers to the function name in the keyword.
             args: Optional argument(s) to pass to the handler function.
@@ -86,11 +86,15 @@ class MultiDL:
             ),
         }
         if not self._dispatch_handler(handlers, formatter="info_{f}"):
-            yt.info_search()
+            if self.query.startswith("http://") or self.query.startswith("https://"):
+                yt.info_video()
+            else:
+                yt.info_search()
 
     def download(
         self,
         type: Literal["audio", "video", "default"] = "default",
+        subtitles: list[str] | None = None,
         threads: int | Literal["max"] = 5,
     ):
         """Download the media."""
@@ -111,6 +115,10 @@ class MultiDL:
             args={
                 "type": type,
                 "threads": threads,
+                "subtitles": subtitles,
             },
         ):
-            yt.download_search(type, threads)
+            if self.query.startswith("http://") or self.query.startswith("https://"):
+                yt.download_video(type, subtitles, threads)
+            else:
+                yt.download_search(type, subtitles, threads)

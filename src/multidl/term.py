@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from importlib.metadata import metadata
 from pyfiglet import Figlet
 from rich import box
+from rich.align import Align
 from rich.console import Console, Group
 from rich.live import Live
 from rich.padding import Padding
@@ -29,7 +30,7 @@ class InfoTable(Table):
     """
     Generate rich info table.
 
-    Args:
+    Parameters:
         info_type: Type of info to be printed.
         data: Data to be printed.
     """
@@ -56,7 +57,7 @@ class SearchTable(Table):
     """
     Generate rich search table.
 
-    Args:
+    Parameters:
         data: List of video dictionaries containing 'url' and 'title'.
     """
 
@@ -117,7 +118,7 @@ class ConfigPanel:
     """
     Generate config panel.
 
-    Args:
+    Parameters:
         file_path: Path to the config file.
     """
 
@@ -216,7 +217,7 @@ class MultiDLArt:
     """ASCII art for Multi DL."""
 
     def __init__(self):
-        txt = Figlet(font="big_money-ne", justify="center").renderText("Multi DL")
+        txt = Figlet(font="big_money-ne").renderText("Multi DL")
         txt = txt.replace("$", "#")
         lines = txt.splitlines()
         green_part = "\n".join(f"[green]{line}[/]" for line in lines[: len(lines) // 2])
@@ -231,22 +232,21 @@ class MultiDLArt:
 class MultiDLInfo(Panel):
     """Multi DL info."""
 
-    def __init__(self, supported_services: list[str]):
+    def __init__(self):
         data = metadata("multidl")
         info = {
             "Version": data.get("Version"),
             "Description": data.get("Summary"),
             "License": data.get("License-Expression"),
-            "Supported Services": ", ".join(supported_services),
         }
         self.art = MultiDLArt().get()
         self.table = Table(box=None, show_header=False)
         for i in info:
             self.table.add_row(f"[yellow bold]•[/] [green bold]{i}[/]", f"[white]{info[i]}[/]")
         super().__init__(
-            Group(self.art, self.table),
+            Group(Align(self.art, "center"), self.table),
             title=f"[green bold]Multi DL v{info['Version']}[/]",
-            subtitle="[green]Made with ❤️  by [link=https://github.com/swayam25 bold cyan]Swayam[/]",
+            subtitle="[green]Made with [red]❤[/] by [link=https://github.com/swayam25 bold cyan]Swayam[/]",
             box=box.ROUNDED,
             title_align="left",
             style="green",
@@ -267,7 +267,7 @@ class Print:
         """
         Print an input message and return the user input.
 
-        Args:
+        Parameters:
             data: The message to print.
             choices: List of choices for the prompt. Defaults to None.
             password: If True, input will be masked. Defaults to False.
@@ -285,7 +285,7 @@ class Print:
         """
         Print a confirmation message and return the user's choice.
 
-        Args:
+        Parameters:
             data: The message to print.
         """
         return Confirm.ask(
@@ -299,7 +299,7 @@ class Print:
         """
         Print an error message.
 
-        Args:
+        Parameters:
             data: The error message to print.
         """
         console.print(f"[red][bold]✗[/] {data}[/]")
@@ -309,7 +309,7 @@ class Print:
         """
         Print a success message.
 
-        Args:
+        Parameters:
             data: The success message to print.
         """
         console.print(f"[green][bold]✓[/] {data}[/]")
@@ -319,7 +319,7 @@ class Print:
         """
         Print a warning message.
 
-        Args:
+        Parameters:
             data: The warning message to print.
         """
         console.print(f"[yellow][bold]![/] {data}[/]")

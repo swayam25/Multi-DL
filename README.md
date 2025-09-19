@@ -35,6 +35,12 @@ A cli tool for downloading media from various platforms
     uv tool install multidl
     ```
 
+- Install via `yay` (AUR)
+    ```sh
+    yay -S python-multidl
+    ```
+    Package available at: https://aur.archlinux.org/packages/python-multidl
+
 ## ⚙️ Configuration
 
 - Default Config File Path

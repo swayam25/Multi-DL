@@ -37,9 +37,9 @@ A cli tool for downloading media from various platforms
 
 - Install via `yay` (AUR)
     ```sh
-    yay -S python-multidl
+    yay -S multidl
     ```
-    Package available at: https://aur.archlinux.org/packages/python-multidl
+    Package available at: https://aur.archlinux.org/multidl.git
 
 ## ⚙️ Configuration
 

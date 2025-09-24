@@ -17,29 +17,19 @@ A cli tool for downloading media from various platforms
 
 > [!IMPORTANT]
 > You must have `FFmpeg` installed on your system. You can download it from [here](https://ffmpeg.org/download.html).
+> Python v3.13 or higher is required.
 
-- **Supported Python version:** 3.13 or higher
+- Official Packages
+    | OS  | Repository                               | Command                   |
+    | --- | ---------------------------------------- | ------------------------- |
+    | Any | [PyPI](https://pypi.org/project/multidl) | `pip install multidl`     |
+    | Any | [PyPI](https://pypi.org/project/multidl) | `uv tool install multidl` |
 
-- Build from source
-    ```sh
-    pip install git+https://github.com/swayam25/Multi-DL
-    ```
+- Community Packages
+    | OS         | Repository                                                                                       | Command          |
+    | ---------- | ------------------------------------------------------------------------------------------------ | ---------------- |
+    | Arch Linux | [AUR](https://aur.archlinux.org/packages/multidl) (*by [`Daniel`](https://github.com/booo2233)*) | `yay -S multidl` |
 
-- Install via `pip`
-    ```sh
-    pip install multidl
-    ```
-
-- Install via `uv`
-    ```sh
-    uv tool install multidl
-    ```
-
-- Install via `yay` (AUR)
-    ```sh
-    yay -S multidl
-    ```
-    Package available at: https://aur.archlinux.org/multidl.git
 
 ## ⚙️ Configuration
 
@@ -63,7 +53,6 @@ A cli tool for downloading media from various platforms
     ```sh
     multidl config --docs
     ```
-
 
 ## ❤️ Contributing
 

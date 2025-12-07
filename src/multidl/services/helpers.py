@@ -83,12 +83,8 @@ class YTDownloader:
             if self.album
             else (file_entry.get("playlist", "") if file_entry.get("playlist") else "")
         )
-        cover_url = (
-            self.cover_url
-            if self.cover_url
-            else (file_entry["thumbnails"][0]["url"] if file_entry.get("thumbnails") else "")
-        )
-        YTOptions.inject_metadata(file_entry, self.title, artist, album, cover_url)
+        cover_url = (self.cover_url or file_entry.get("thumbnail")) or ""
+        YTOptions.inject_metadata(dict(file_entry), self.title, artist or "", album, cover_url)
 
         ydl.process_info(file_entry)
 

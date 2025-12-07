@@ -2,8 +2,11 @@ import datetime
 from ..term import InfoTable, ProgressBar, SearchTable
 from ..utils import SuppressLogger
 from .helpers import Downloader, DownloadTaskSchema
-from typing import Literal
+from typing import TYPE_CHECKING, Literal, cast
 from yt_dlp import YoutubeDL
+
+if TYPE_CHECKING:
+    from yt_dlp import _Params
 
 
 def count_channel_entries(channel):
@@ -49,7 +52,7 @@ class Search:
             ) as ydl:
                 info = ydl.extract_info(f"ytsearch20:{query}", download=False)
                 if info and "entries" in info:  # Check if info is not None and has entries
-                    for i in info["entries"]:
+                    for i in cast(list, info["entries"]):
                         self.vids.append({"title": i["title"], "url": i["url"]})
                 else:  # Throw an error if no entries are found and exit
                     progress.search.update(
@@ -84,7 +87,7 @@ class YouTube:
         extract_flat: bool | Literal["in_playlist", "discard", "discard_in_playlist"] = False,
     ) -> dict:
         """Unified method to fetch info with progress bar and error handling."""
-        ydl_opts = {
+        ydl_opts: "_Params" = {  # noqa: UP037
             "quiet": True,
             "noprogress": True,
             "ignoreerrors": True,
@@ -108,7 +111,7 @@ class YouTube:
                     completed=1,
                 )
                 self.progress.search.remove_task(task)
-        return info
+        return dict(info)
 
     def info_pl(self) -> None:
         """Get the playlist info."""

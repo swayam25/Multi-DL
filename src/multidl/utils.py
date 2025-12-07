@@ -1,23 +1,38 @@
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
+
+if TYPE_CHECKING:
+    from yt_dlp import _Params
 
 
 class SuppressLogger:
     """Custom logger to suppress all yt-dlp output including warnings."""
 
-    def debug(self, msg):
+    def __init__(self, ydl=None):
+        """Initialize logger with optional ydl parameter."""
+        pass
+
+    def debug(self, *args, **kwargs):
         """Suppress debug messages."""
         pass
 
-    def info(self, msg):
+    def info(self, *args, **kwargs):
         """Suppress info messages."""
         pass
 
-    def warning(self, msg):
+    def warning(self, *args, **kwargs):
         """Suppress warning messages."""
         pass
 
-    def error(self, msg):
+    def error(self, *args, **kwargs):
         """Suppress error messages."""
+        pass
+
+    def stdout(self, *args, **kwargs):
+        """Suppress stdout messages."""
+        pass
+
+    def stderr(self, *args, **kwargs):
+        """Suppress stderr messages."""
         pass
 
 
@@ -54,46 +69,54 @@ class YTOptions:
 
         safe_dir = sanitize_path(dir)
         safe_filename = sanitize_path(filename)
+        postprocessors: list = []
 
-        yt_options = {
+        if subtitles and type != "audio":  # Embed subtitles only for video or default type
+            postprocessors.append({"key": "FFmpegEmbedSubtitle"})
+
+        if type == "audio":  # Download audio only
+            format_str = "ba[ext=m4a]/ba"
+            postprocessors.append(
+                {"key": "FFmpegExtractAudio", "preferredcodec": "vorbis", "preferredquality": "0"}
+            )
+        else:
+            if type == "video":  # Download video only
+                format_str = "bv[ext=mp4]/bv"
+            else:
+                format_str = "bv*+ba[ext=mp4]/best"
+            postprocessors.append({"key": "FFmpegVideoConvertor", "preferedformat": "mp4"})
+
+        # Embed thumbnail and metadata in both audio and video
+        postprocessors.extend(
+            [
+                {"key": "EmbedThumbnail"},
+                {"key": "FFmpegMetadata"},
+            ]
+        )
+
+        yt_options: "_Params" = {  # noqa: UP037
             "quiet": True,
             "noprogress": True,
             "ignoreerrors": True,
             "no_warnings": True,
             "logger": SuppressLogger(),
             "logtostderr": False,
-            "format": "bv*+ba[ext=mp4]/best",
+            "format": format_str,
             "outtmpl": f"{safe_dir}/{safe_filename}.%(ext)s",
-            "postprocessors": [],
+            "postprocessors": postprocessors,
         }
-        if subtitles and type != "audio":  # Embed subtitles only for video or default type
-            yt_options["writesubtitles"] = True
-            yt_options["writeautomaticsub"] = True
-            yt_options["subtitleslangs"] = list(subtitles)
-            yt_options["postprocessors"].append({"key": "FFmpegEmbedSubtitle"})
-        if type == "audio":  # Download audio only
-            yt_options["format"] = "ba[ext=m4a]/ba"
-            yt_options["postprocessors"].append(
-                {"key": "FFmpegExtractAudio", "preferredcodec": "vorbis", "preferredquality": "0"}
-            )
-        else:
-            if type == "video":  # Download video only
-                yt_options["format"] = "bv[ext=mp4]/bv"
-            yt_options["postprocessors"].append(
-                {"key": "FFmpegVideoConvertor", "preferedformat": "mp4"}
-            )
-        # Embed thumbnail and metadata in both audio and video
-        yt_options["postprocessors"].extend(
-            [
-                {"key": "EmbedThumbnail"},
-                {"key": "FFmpegMetadata"},
-            ]
-        )
+
+        if subtitles and type != "audio":
+            yt_options |= {
+                "writesubtitles": True,
+                "writeautomaticsub": True,
+                "subtitleslangs": list(subtitles),
+            }
         if progress_hooks:
             yt_options["progress_hooks"] = progress_hooks
         self.yt_options = yt_options
 
-    def get(self) -> dict:
+    def get(self) -> "_Params":
         """Get the options for yt-dlp."""
         return self.yt_options
 

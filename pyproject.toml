@@ -1,6 +1,6 @@
 [project]
 name = "multidl"
-version = "2.1.2"
+version = "2.1.3"
 description = "A cli tool for downloading media from various platforms."
 license = "GPL-3.0"
 readme = "README.md"

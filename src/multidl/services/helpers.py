@@ -94,11 +94,8 @@ class YTDownloader:
             total: int = (
                 d["total_bytes"]
                 if "total_bytes" in d
-                else d["downloaded_bytes"] + 1
-                if "downloaded_bytes" in d
-                else 0
+                else d.get("total_bytes_estimate", d["downloaded_bytes"])
             )
-            self.progress.download.start_task(self.task) if "total_bytes" in d else None
             if d["status"] == "downloading":
                 self.progress.download.update(
                     self.task,
@@ -110,8 +107,11 @@ class YTDownloader:
                 self.progress.download.update(
                     self.task,
                     description=f"[green]Downloaded[/] [cyan]{self._title}[/]",
+                    total=total,
                     completed=total,
                 )
+                self.progress.download.refresh()
+                self.progress.download.stop_task(self.task)
 
 
 @dataclass

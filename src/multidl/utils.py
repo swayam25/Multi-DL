@@ -151,4 +151,5 @@ class YTOptions:
                     "preference": 1000,  # High preference to ensure it's selected
                 },
             ]
+            info_dict["thumbnail"] = cover_url
         return info_dict

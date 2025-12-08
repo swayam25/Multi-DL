@@ -246,7 +246,7 @@ class MultiDLInfo(Panel):
         super().__init__(
             Group(Align(self.art, "center"), self.table),
             title=f"[green bold]Multi DL v{info['Version']}[/]",
-            subtitle="[green]Made with [red]❤[/] by [link=https://github.com/swayam25 bold cyan]Swayam[/]",
+            subtitle="[green]Made with [red]❤[/]  by [link=https://github.com/swayam25 bold cyan]Swayam[/]",
             box=box.ROUNDED,
             title_align="left",
             style="green",

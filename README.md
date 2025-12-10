@@ -6,6 +6,10 @@ A cli tool for downloading media from various platforms
 
 </div>
 
+## 📸 Preview
+
+https://github.com/user-attachments/assets/17c16d8b-57f4-4f87-ac1c-8904f0399167
+
 ## 🎯 Features
 
 - Obtain information about any video, music, playlist, album, channel, etc...

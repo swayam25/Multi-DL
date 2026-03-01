@@ -6,6 +6,11 @@ A cli tool for downloading media from various platforms
 
 </div>
 
+> [!IMPORTANT]
+> This project is no longer maintained and has been archived.
+>
+> Thank you so much to all the contributors and users who supported this project!
+
 ## 📸 Preview
 
 https://github.com/user-attachments/assets/17c16d8b-57f4-4f87-ac1c-8904f0399167
